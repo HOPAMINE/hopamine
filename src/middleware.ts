@@ -41,7 +41,7 @@ function handleZimaRouting(req: NextRequest): NextResponse | null {
 
     if (pathname === "/") {
       const url = req.nextUrl.clone();
-      url.pathname = "/zima";
+      url.pathname = "/zima/search";
       return NextResponse.rewrite(url);
     }
 
@@ -94,6 +94,11 @@ function handleZimaRouting(req: NextRequest): NextResponse | null {
     }
 
     return null;
+  }
+
+  if (pathname === "/") {
+    const zimaUrl = getZimaSiteUrl("/search", search, protocol, port);
+    return NextResponse.redirect(zimaUrl, 307);
   }
 
   if (pathname === "/zima" || pathname.startsWith("/zima/")) {

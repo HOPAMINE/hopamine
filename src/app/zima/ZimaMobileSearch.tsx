@@ -4,14 +4,10 @@ import { useState } from "react";
 import ZimaSearchMap from "@/components/zima/ZimaSearchMap";
 import { findSearchResultById } from "@/lib/zima/searchResults";
 import { ZimaComposerFields } from "./ZimaComposerFields";
-import { ZimaSearchProfilePanel } from "./ZimaSearchProfilePanel";
 import { ZimaMobileResultsDrawer } from "./ZimaMobileResultsDrawer";
-import type { useZimaChat } from "./useZimaChat";
 import { ZimaSearchProfilePanel } from "./ZimaSearchProfilePanel";
-import { ZimaMobileResultsDrawer } from "./ZimaMobileResultsDrawer";
 import type { useZimaChat } from "./useZimaChat";
 import type { useZimaSearch } from "./useZimaSearch";
-import { useZimaMobileNavHrefs } from "./useZimaMobileNavHrefs";
 
 type Chat = ReturnType<typeof useZimaChat>;
 type Search = ReturnType<typeof useZimaSearch>;

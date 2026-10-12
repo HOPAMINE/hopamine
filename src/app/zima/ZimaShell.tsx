@@ -18,7 +18,6 @@ type ZimaShellProps = {
 export function ZimaShell({ isChatMode, onChatModeChange }: ZimaShellProps) {
   const chat = useZimaChat(isChatMode, { resultsOnly: true });
   const search = useZimaSearch(chat);
-  const { homeHref, chatsHref, profileHref } = useZimaMobileNavHrefs();
   const isMdUp = useIsMdUp();
   const enterChat = () => onChatModeChange(true);
 
@@ -58,7 +57,9 @@ export function ZimaShell({ isChatMode, onChatModeChange }: ZimaShellProps) {
           className={`mx-auto w-full shrink-0 bg-white ${ZIMA_LANDING_SEARCH_WIDTH}`}
         >
           <div className="px-6">
-            <ZimaMakeathonBanner />
+            <div className="mx-auto w-[85%]">
+              <ZimaMakeathonBanner />
+            </div>
           </div>
         </div>
       </div>
@@ -86,7 +87,9 @@ export function ZimaShell({ isChatMode, onChatModeChange }: ZimaShellProps) {
         </div>
         <div className="flex w-full justify-center px-6">
           <div className={`w-full ${ZIMA_LANDING_SEARCH_WIDTH}`}>
-            <ZimaMakeathonBanner />
+            <div className="mx-auto w-[75%]">
+              <ZimaMakeathonBanner />
+            </div>
           </div>
         </div>
       </div>

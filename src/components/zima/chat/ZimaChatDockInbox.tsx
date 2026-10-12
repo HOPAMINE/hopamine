@@ -29,7 +29,7 @@ export function ZimaChatDockInbox({
       aria-label="Conversations"
       className={
         isPage
-          ? "flex flex-col gap-3"
+          ? "flex flex-col md:gap-3"
           : "flex min-h-0 flex-1 flex-col overflow-y-auto"
       }
     >
@@ -49,14 +49,21 @@ export function ZimaChatDockInbox({
         const isSelected = conversation.id === selectedConversationId;
         const unreadCount = conversation.unreadCount ?? 0;
         return (
-          <li key={conversation.id}>
+          <li
+            key={conversation.id}
+            className={
+              isPage
+                ? "border-b border-neutral-200 last:border-b-0 md:border-b-0"
+                : undefined
+            }
+          >
             <button
               type="button"
               onClick={() => onSelectConversation(conversation.id)}
               aria-current={isSelected ? "true" : undefined}
               className={
                 isPage
-                  ? "flex w-full gap-3 rounded-2xl border border-neutral-200 bg-neutral-100 p-3 text-left transition-colors hover:bg-neutral-200/80"
+                  ? "flex w-full gap-3 p-3 text-left transition-colors hover:bg-neutral-50 md:rounded-2xl md:border md:border-neutral-200 md:bg-neutral-100 md:hover:bg-neutral-200/80"
                   : `flex w-full gap-2.5 p-2.5 text-left transition-colors ${
                       isSelected
                         ? "bg-[#d6effc]"

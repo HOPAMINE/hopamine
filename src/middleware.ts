@@ -96,11 +96,6 @@ function handleZimaRouting(req: NextRequest): NextResponse | null {
     return null;
   }
 
-  if (pathname === "/") {
-    const zimaUrl = getZimaSiteUrl("/search", search, protocol, port);
-    return NextResponse.redirect(zimaUrl, 307);
-  }
-
   if (pathname === "/zima" || pathname.startsWith("/zima/")) {
     if (/\.[a-z0-9]+$/i.test(pathname)) {
       return null;

@@ -155,7 +155,10 @@ export default defineSchema({
 
   presence: defineTable({
     userId: v.id("users"),
-    lastSeenAt: v.number(),
+    lastSeenAt: v.optional(v.number()),
+    /** Previous presence model. Cleared by migrateLegacyPresence. */
+    isOnline: v.optional(v.boolean()),
+    updatedAt: v.optional(v.number()),
   }).index("by_user", ["userId"]),
 
   conversations: defineTable({

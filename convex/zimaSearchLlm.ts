@@ -7,6 +7,7 @@ import { z } from "zod";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { action } from "./_generated/server";
+import { zimaSearchCityById } from "../shared/zimaSearchCities";
 import {
   zimaSearchArgs,
   zimaSearchResultValidator,
@@ -38,15 +39,16 @@ function describeCandidateForPrompt(candidate: ZimaSearchResult): string {
 async function pickCandidateIdsWithClaude(
   client: Anthropic,
   searchText: string,
+  cityLabel: string,
   candidates: ZimaSearchResult[],
 ): Promise<string[]> {
   const systemPrompt = [
-    "You pick profiles of builders in New York City for a people search.",
+    `You pick profiles of builders in ${cityLabel} for a people search.`,
     `Given the search text and a list of candidate profiles, return the ids of the ${RESULT_COUNT} profiles that best fit the search, most relevant first.`,
     `Return fewer than ${RESULT_COUNT} only when fewer candidates fit at all. If the search is generic, pick the most interesting ${RESULT_COUNT} for it.`,
     "Never invent ids; only use ids from the candidate list.",
   ].join(" ");
-  const userPrompt = `Search: ${searchText || "future builders in NYC"}\n\nCandidates:\n${candidates
+  const userPrompt = `Search: ${searchText || `future builders in ${cityLabel}`}\n\nCandidates:\n${candidates
     .map(describeCandidateForPrompt)
     .join("\n")}`;
 
@@ -91,7 +93,13 @@ export const search = action({
     const client = new Anthropic({ apiKey });
     let pickedIds: string[];
     try {
-      pickedIds = await pickCandidateIdsWithClaude(client, args.text, candidates);
+      const cityLabel = zimaSearchCityById(args.city).label;
+      pickedIds = await pickCandidateIdsWithClaude(
+        client,
+        args.text,
+        cityLabel,
+        candidates,
+      );
     } catch (error) {
       console.error("Zima search model call failed, returning newest candidates", error);
       return candidates.slice(0, RESULT_COUNT);

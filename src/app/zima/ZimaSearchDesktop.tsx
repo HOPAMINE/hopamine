@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ZimaSearchMap from "@/components/zima/ZimaSearchMap";
-import { findSearchResultById } from "@/lib/zima/searchResults";
+import {
+  findSearchResultById,
+  type ZimaSearchResult,
+} from "@/lib/zima/searchResults";
+import { zimaSearchCityById } from "../../../shared/zimaSearchCities";
 import { ZimaSearchHeader } from "./ZimaSearchHeader";
 import { ZimaSearchProfilePanel } from "./ZimaSearchProfilePanel";
 import { ZimaSearchResultCards } from "./ZimaSearchResultCards";
@@ -15,12 +19,19 @@ type Search = ReturnType<typeof useZimaSearch>;
 type Props = {
   chat: Chat;
   search: Search;
+  profiles: ZimaSearchResult[];
   onFirstSend: () => void;
 };
 
-export function ZimaSearchDesktop({ chat, search, onFirstSend }: Props) {
+export function ZimaSearchDesktop({ chat, search, profiles, onFirstSend }: Props) {
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
-  const selectedResult = findSearchResultById(search.results, selectedResultId);
+  const selectedResult =
+    findSearchResultById(profiles, selectedResultId) ??
+    findSearchResultById(search.results, selectedResultId);
+
+  useEffect(() => {
+    setSelectedResultId(null);
+  }, [search.filters.city]);
 
   return (
     <div className="hidden h-dvh flex-col overflow-hidden bg-white md:flex">
@@ -42,6 +53,7 @@ export function ZimaSearchDesktop({ chat, search, onFirstSend }: Props) {
               results={search.results}
               loadingResults={search.loadingResults}
               errorMessage={search.error}
+              cityLabel={zimaSearchCityById(search.filters.city).label}
               selectedResultId={selectedResultId}
               onSelectResult={setSelectedResultId}
             />
@@ -54,7 +66,8 @@ export function ZimaSearchDesktop({ chat, search, onFirstSend }: Props) {
         >
           <ZimaSearchMap
             showPins
-            results={search.results}
+            cityId={search.filters.city}
+            directory={profiles}
             layoutKey="desktop-results"
             className="absolute inset-0"
             selectedResultId={selectedResultId}

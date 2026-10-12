@@ -403,6 +403,7 @@ export const completeZimaOnboarding = mutation({
       bio: trimText(args.bio) || undefined,
       nowPlaying: trimText(args.nowPlaying) || undefined,
       skills: normalizeSkills(args.skills),
+      archetypes: normalizeSkills(args.skills),
       ...(args.interests !== undefined
         ? { interests: normalizeSkills(args.interests) }
         : {}),

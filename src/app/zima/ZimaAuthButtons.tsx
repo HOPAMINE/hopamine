@@ -9,7 +9,6 @@ import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import {
   getZimaAuthHref,
-  getZimaAuthPath,
   getZimaPath,
   getZimaPostAuthRedirect,
   isZimaOnboardPath,
@@ -90,7 +89,6 @@ function ZimaSignedInUser() {
   const [editOpen, setEditOpen] = useState(false);
   const hostname =
     typeof window === "undefined" ? "" : window.location.hostname;
-  const settingsHref = getZimaAuthPath("settings", hostname);
   const displayName =
     convexUser?.name?.trim() ||
     user?.fullName?.trim() ||
@@ -106,6 +104,7 @@ function ZimaSignedInUser() {
           name: user.fullName?.trim() || user.firstName?.trim() || "Account",
           username: user.username ?? undefined,
           avatarUrl: user.imageUrl ?? "",
+          archetypes: [],
         }
       : null;
 
@@ -176,9 +175,6 @@ function ZimaSignedInUser() {
             >
               View profile
             </button>
-            <Link href={settingsHref} role="menuitem" className={menuItemClass}>
-              Settings
-            </Link>
             <button
               type="button"
               role="menuitem"

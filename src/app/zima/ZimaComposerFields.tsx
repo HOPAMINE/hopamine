@@ -63,8 +63,8 @@ export function ZimaComposerFields({
           type="text"
           value={message}
           onChange={(event) => setMessage(event.target.value)}
-          placeholder="Find future builders near you..."
-          aria-label="Find future builders near you"
+          placeholder="Find builders near you..."
+          aria-label="Find builders near you"
           disabled={isLoading}
           className={`${jetbrainsMono.className} h-10 min-w-0 flex-1 appearance-none border-0 bg-transparent px-2 py-0 text-[15px] text-neutral-800 shadow-none outline-none placeholder:text-[15px] placeholder:text-neutral-400 disabled:opacity-60`}
         />

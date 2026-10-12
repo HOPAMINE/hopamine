@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { jetbrainsMono, newsreader } from "../../../fonts";
+import { profileArchetypes } from "../../../shared/zimaVocabulary";
 import type { ZimaProfileData } from "./ZimaProfileEditModal";
 
 const HOPAMINE_BLUE = "#00a6f3";
@@ -85,6 +86,31 @@ export function ZimaProfileCard({ user, onEdit }: ZimaProfileCardProps) {
 
       <div className="mt-6 space-y-4 border-t border-neutral-200 pt-6">
         <ProfileField label="Location" value={user.location} />
+        <div className="space-y-1">
+          <p
+            className={`${jetbrainsMono.className} text-[11px] font-semibold uppercase tracking-wide text-neutral-500`}
+          >
+            Archetypes
+          </p>
+          {user.archetypes.length > 0 ? (
+            <ul className="flex flex-wrap gap-2">
+              {user.archetypes.map((archetype) => (
+                <li
+                  key={archetype}
+                  className={`${jetbrainsMono.className} rounded-full bg-white px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-neutral-800`}
+                >
+                  {archetype}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p
+              className={`${jetbrainsMono.className} text-[14px] leading-relaxed text-neutral-800`}
+            >
+              —
+            </p>
+          )}
+        </div>
         <ProfileField label="Bio" value={user.bio} />
       </div>
 
@@ -106,6 +132,8 @@ export function toZimaProfileData(user: {
   avatarUrl: string;
   bio?: string;
   location?: string;
+  archetypes?: string[];
+  skills?: string[];
 }): ZimaProfileData {
   return {
     name: user.name,
@@ -113,5 +141,6 @@ export function toZimaProfileData(user: {
     avatarUrl: user.avatarUrl,
     bio: user.bio,
     location: user.location,
+    archetypes: profileArchetypes(user),
   };
 }

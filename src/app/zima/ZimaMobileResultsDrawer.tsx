@@ -18,6 +18,7 @@ type Props = {
   results: ZimaSearchResult[];
   loadingResults?: boolean;
   errorMessage?: string | null;
+  cityLabel?: string;
   selectedResultId?: string | null;
   onSelectResult: (id: string) => void;
 };
@@ -63,8 +64,12 @@ function nearestSnap(offsets: SnapOffsets, offset: number): Snap {
   return best;
 }
 
-function foundBuildersLabel(count: number, loadingResults: boolean) {
-  if (loadingResults && count === 0) return "searching NYC…";
+function foundBuildersLabel(
+  count: number,
+  loadingResults: boolean,
+  cityLabel: string,
+) {
+  if (loadingResults && count === 0) return `searching ${cityLabel}…`;
   const noun = count === 1 ? "builder" : "builders";
   return `we found ${count} ${noun}`;
 }
@@ -77,6 +82,7 @@ export function ZimaMobileResultsDrawer({
   results,
   loadingResults = false,
   errorMessage = null,
+  cityLabel = "New York City",
   selectedResultId,
   onSelectResult,
 }: Props) {
@@ -159,7 +165,7 @@ export function ZimaMobileResultsDrawer({
           <h2
             className={`${jetbrainsMono.className} w-full text-center text-[13px] font-semibold uppercase tracking-[0.12em] text-neutral-900`}
           >
-            {foundBuildersLabel(count, loadingResults)}
+            {foundBuildersLabel(count, loadingResults, cityLabel)}
           </h2>
         </div>
         <div
@@ -169,6 +175,7 @@ export function ZimaMobileResultsDrawer({
             results={results}
             loadingResults={loadingResults}
             errorMessage={errorMessage}
+            cityLabel={cityLabel}
             selectedResultId={selectedResultId}
             onSelectResult={onSelectResult}
           />

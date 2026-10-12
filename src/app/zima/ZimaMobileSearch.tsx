@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ZimaSearchMap from "@/components/zima/ZimaSearchMap";
-import { findSearchResultById } from "@/lib/zima/searchResults";
+import {
+  findSearchResultById,
+  type ZimaSearchResult,
+} from "@/lib/zima/searchResults";
+import { zimaSearchCityById } from "../../../shared/zimaSearchCities";
 import { ZimaComposerFields } from "./ZimaComposerFields";
 import { ZimaMobileResultsDrawer } from "./ZimaMobileResultsDrawer";
 import { ZimaSearchProfilePanel } from "./ZimaSearchProfilePanel";
@@ -15,14 +19,25 @@ type Search = ReturnType<typeof useZimaSearch>;
 type Props = {
   chat: Chat;
   search: Search;
+  profiles: ZimaSearchResult[];
   onFirstSend: () => void;
 };
 
-export function ZimaMobileSearch({ chat, search, onFirstSend }: Props) {
+export function ZimaMobileSearch({
+  chat,
+  search,
+  profiles,
+  onFirstSend,
+}: Props) {
   const { hasSearchResults } = chat;
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
+  const selectedResult =
+    findSearchResultById(profiles, selectedResultId) ??
+    findSearchResultById(search.results, selectedResultId);
 
-  const selectedResult = findSearchResultById(search.results, selectedResultId);
+  useEffect(() => {
+    setSelectedResultId(null);
+  }, [search.filters.city]);
 
   return (
     <div className="relative z-10 flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
@@ -43,7 +58,8 @@ export function ZimaMobileSearch({ chat, search, onFirstSend }: Props) {
       <main className="relative min-h-0 flex-1 overflow-hidden">
         <ZimaSearchMap
           showPins={hasSearchResults}
-          results={search.results}
+          cityId={search.filters.city}
+          directory={profiles}
           layoutKey="mobile-results"
           className="absolute inset-0 z-0 overflow-hidden"
           selectedResultId={selectedResultId}
@@ -62,6 +78,7 @@ export function ZimaMobileSearch({ chat, search, onFirstSend }: Props) {
             results={search.results}
             loadingResults={search.loadingResults}
             errorMessage={search.error}
+            cityLabel={zimaSearchCityById(search.filters.city).label}
             selectedResultId={selectedResultId}
             onSelectResult={setSelectedResultId}
           />

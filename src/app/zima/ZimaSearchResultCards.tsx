@@ -9,6 +9,7 @@ type Props = {
   results: ZimaSearchResult[];
   loadingResults?: boolean;
   errorMessage?: string | null;
+  cityLabel?: string;
   selectedResultId?: string | null;
   onSelectResult?: (id: string) => void;
   /** Desktop left bar: two builders per row. */
@@ -19,6 +20,7 @@ export function ZimaSearchResultCards({
   results,
   loadingResults = false,
   errorMessage = null,
+  cityLabel = "New York City",
   selectedResultId,
   onSelectResult,
   columns = 1,
@@ -30,7 +32,7 @@ export function ZimaSearchResultCards({
     return <p className={`${statusClass} text-red-600`}>{errorMessage}</p>;
   }
   if (loadingResults && results.length === 0) {
-    return <p className={statusClass}>Searching NYC…</p>;
+    return <p className={statusClass}>Searching {cityLabel}…</p>;
   }
   if (results.length === 0) {
     return (

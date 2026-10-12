@@ -4,6 +4,10 @@ import { useAction } from "convex/react";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { ZimaSearchResult } from "@/lib/zima/searchResults";
+import {
+  DEFAULT_ZIMA_SEARCH_CITY_ID,
+  type ZimaSearchCityId,
+} from "../../../shared/zimaSearchCities";
 import type { useZimaChat } from "./useZimaChat";
 
 type Chat = ReturnType<typeof useZimaChat>;
@@ -12,12 +16,14 @@ export type ZimaSearchFilterState = {
   archetypes: string[];
   interests: string[];
   activeOnly: boolean;
+  city: ZimaSearchCityId;
 };
 
 export const EMPTY_ZIMA_SEARCH_FILTERS: ZimaSearchFilterState = {
   archetypes: [],
   interests: [],
   activeOnly: false,
+  city: DEFAULT_ZIMA_SEARCH_CITY_ID,
 };
 
 /** Chip toggles arrive in bursts; wait for them to settle before paying for a model call. */
@@ -50,6 +56,7 @@ export function useZimaSearch(chat: Chat) {
       archetypes: filters.archetypes,
       interests: filters.interests,
       activeOnly: filters.activeOnly,
+      city: filters.city,
     }),
     [submittedText, filters],
   );

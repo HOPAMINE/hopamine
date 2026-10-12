@@ -48,6 +48,13 @@ export default defineSchema({
     .index("by_username", ["username"])
     .index("by_onboarding_completed_at", ["onboardingCompletedAt"]),
 
+  /** Geocodes for profile locations outside the built-in city list. A row with no coordinates is a recorded miss. */
+  locationPoints: defineTable({
+    key: v.string(),
+    lng: v.optional(v.number()),
+    lat: v.optional(v.number()),
+  }).index("by_key", ["key"]),
+
   projects: defineTable({
     userId: v.id("users"),
     field: projectFieldValidator,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { jetbrainsMono } from "../../../fonts";
 import { findSearchResultById } from "@/lib/zima/searchResults";
+import { zimaSearchCityById } from "../../../shared/zimaSearchCities";
 import { ZimaComposerFields } from "./ZimaComposerFields";
 import { ZimaSearchProfilePanel } from "./ZimaSearchProfilePanel";
 import { ZimaSearchResultCards } from "./ZimaSearchResultCards";
@@ -61,6 +62,7 @@ export function ZimaComposer({
               results={search.results}
               loadingResults={search.loadingResults}
               errorMessage={search.error}
+              cityLabel={zimaSearchCityById(search.filters.city).label}
               onSelectResult={setSelectedResultId}
             />
           )

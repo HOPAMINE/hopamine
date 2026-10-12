@@ -2,17 +2,29 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalQuery, type QueryCtx } from "./_generated/server";
 import { getCurrentUser } from "./lib/currentUser";
+import { jitterCoordinates } from "../shared/nycLocationCoordinates";
 import {
-  jitterCoordinates,
-  resolveNycCoordinates,
-} from "../shared/nycLocationCoordinates";
+  coordinatesForSearchLocation,
+  searchCityIdForLocation,
+  type ZimaSearchCityId,
+} from "../shared/zimaSearchCities";
 import { hasAnyMatchingTag } from "../shared/zimaVocabulary";
+
+const zimaSearchCityId = v.union(
+  v.literal("new-york-city"),
+  v.literal("paris"),
+  v.literal("sydney"),
+  v.literal("bangalore"),
+  v.literal("london"),
+  v.literal("montreal"),
+);
 
 export const zimaSearchArgs = {
   text: v.string(),
   archetypes: v.array(v.string()),
   interests: v.array(v.string()),
   activeOnly: v.boolean(),
+  city: zimaSearchCityId,
 };
 
 export const zimaSearchResultValidator = v.object({
@@ -34,6 +46,7 @@ export type ZimaSearchArgs = {
   archetypes: string[];
   interests: string[];
   activeOnly: boolean;
+  city: ZimaSearchCityId;
 };
 
 export type ZimaSearchResult = {
@@ -59,7 +72,7 @@ function toSearchResult(
   user: Doc<"users">,
   lastSeenAt: number | undefined,
 ): ZimaSearchResult | null {
-  const coordinates = resolveNycCoordinates(user.location);
+  const coordinates = coordinatesForSearchLocation(user.location);
   if (!coordinates || !user.location) return null;
   const { lng, lat } = jitterCoordinates(coordinates, user._id);
   return {
@@ -71,10 +84,23 @@ function toSearchResult(
     location: user.location,
     lng,
     lat,
-    skills: [...(user.archetypes ?? []), ...(user.skills ?? [])],
+    skills: uniqueLabels([...(user.archetypes ?? []), ...(user.skills ?? [])]),
     interests: user.interests ?? [],
     lastSeenAt,
   };
+}
+
+function uniqueLabels(labels: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const label of labels) {
+    const trimmed = label.trim();
+    const key = trimmed.toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(trimmed);
+  }
+  return unique;
 }
 
 async function loadLastSeenAt(
@@ -89,8 +115,9 @@ async function loadLastSeenAt(
 }
 
 /**
- * The newest onboarded NYC users other than the caller, narrowed by the chip
- * filters. Ordering is newest account first; ranking is the model's job.
+ * The newest onboarded users in the selected city, other than the caller,
+ * narrowed by the chip filters. Ordering is newest account first; ranking
+ * is the model's job.
  */
 export const candidates = internalQuery({
   args: zimaSearchArgs,
@@ -106,6 +133,7 @@ export const candidates = internalQuery({
     const tagFiltered = users.filter((user) => {
       if (currentUser && user._id === currentUser._id) return false;
       const savedArchetypes = [...(user.archetypes ?? []), ...(user.skills ?? [])];
+      if (searchCityIdForLocation(user.location) !== args.city) return false;
       if (!hasAnyMatchingTag(savedArchetypes, args.archetypes)) return false;
       return hasAnyMatchingTag(user.interests ?? [], args.interests);
     });

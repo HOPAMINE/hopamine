@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  ZIMA_SEARCH_CITIES,
+  zimaSearchCityById,
+} from "../../../shared/zimaSearchCities";
 import { ZIMA_ARCHETYPES, ZIMA_INTERESTS } from "../../../shared/zimaVocabulary";
 import { jetbrainsMono } from "../../../fonts";
 import type { ZimaSearchFilterState } from "./useZimaSearch";
@@ -167,8 +171,10 @@ export function ZimaSearchFilters({
 }: Props) {
   const [interestsOpen, setInterestsOpen] = useState(false);
   const [archetypesOpen, setArchetypesOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const interestsPanelId = useId();
   const archetypesPanelId = useId();
+  const locationPanelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const inComposer = variant === "composer";
 
@@ -178,6 +184,7 @@ export function ZimaSearchFilters({
       if (!root || root.contains(event.target as Node)) return;
       setInterestsOpen(false);
       setArchetypesOpen(false);
+      setLocationOpen(false);
     }
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
@@ -205,11 +212,68 @@ export function ZimaSearchFilters({
         role="group"
         aria-label="Search filters"
       >
-        <span
-          className={`${jetbrainsMono.className} inline-flex h-8 shrink-0 items-center px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-800 sm:text-[12px]`}
-        >
-          Location: NYC
-        </span>
+        <div className="relative">
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={locationOpen}
+            aria-controls={locationPanelId}
+            onClick={() => {
+              setInterestsOpen(false);
+              setArchetypesOpen(false);
+              setLocationOpen((open) => !open);
+            }}
+            className={`${jetbrainsMono.className} inline-flex h-8 shrink-0 items-center gap-1 bg-transparent px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-800 sm:text-[12px]`}
+          >
+            Location: {zimaSearchCityById(filters.city).label}
+            <svg
+              aria-hidden
+              viewBox="0 0 12 12"
+              className={`h-3 w-3 shrink-0 transition-transform ${locationOpen ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="square"
+              strokeLinejoin="miter"
+            >
+              <path d="M2.5 4.5 6 8l3.5-3.5" />
+            </svg>
+          </button>
+          {locationOpen ? (
+            <ul
+              id={locationPanelId}
+              role="listbox"
+              aria-label="Choose a city"
+              className="absolute left-0 top-full z-50 mt-1 min-w-[12rem] border border-neutral-300 bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              {ZIMA_SEARCH_CITIES.map((city) => {
+                const selected = filters.city === city.id;
+                return (
+                  <li key={city.id} role="option" aria-selected={selected}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onFiltersChange({ ...filters, city: city.id });
+                        setLocationOpen(false);
+                      }}
+                      className={`${jetbrainsMono.className} w-full px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide transition-colors sm:text-[12px] ${
+                        selected
+                          ? "text-white"
+                          : "text-neutral-800 hover:bg-neutral-100"
+                      }`}
+                      style={
+                        selected ? { backgroundColor: HOPAMINE_BLUE } : undefined
+                      }
+                    >
+                      {city.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
 
         <div className="relative">
           <FilterCheckbox
@@ -219,6 +283,7 @@ export function ZimaSearchFilters({
             ariaExpanded={archetypesOpen}
             ariaControls={archetypesPanelId}
             onClick={() => {
+              setLocationOpen(false);
               setInterestsOpen(false);
               setArchetypesOpen((open) => !open);
             }}
@@ -264,6 +329,7 @@ export function ZimaSearchFilters({
             ariaExpanded={interestsOpen}
             ariaControls={interestsPanelId}
             onClick={() => {
+              setLocationOpen(false);
               setArchetypesOpen(false);
               setInterestsOpen((open) => !open);
             }}

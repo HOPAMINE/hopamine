@@ -1,5 +1,6 @@
 "use client";
 
+import type { ZimaSearchResult } from "@/lib/zima/searchResults";
 import { newsreader } from "../../../fonts";
 import { ZimaComposer } from "./ZimaComposer";
 import { ZimaMakeathonBanner } from "./ZimaMakeathonBanner";
@@ -13,9 +14,14 @@ import { useIsMdUp } from "./useIsMdUp";
 type ZimaShellProps = {
   isChatMode: boolean;
   onChatModeChange: (isChatMode: boolean) => void;
+  profiles: ZimaSearchResult[];
 };
 
-export function ZimaShell({ isChatMode, onChatModeChange }: ZimaShellProps) {
+export function ZimaShell({
+  isChatMode,
+  onChatModeChange,
+  profiles,
+}: ZimaShellProps) {
   const chat = useZimaChat(isChatMode, { resultsOnly: true });
   const search = useZimaSearch(chat);
   const isMdUp = useIsMdUp();
@@ -23,10 +29,22 @@ export function ZimaShell({ isChatMode, onChatModeChange }: ZimaShellProps) {
 
   if (isChatMode) {
     if (isMdUp) {
-      return <ZimaSearchDesktop chat={chat} search={search} onFirstSend={enterChat} />;
+      return (
+        <ZimaSearchDesktop
+          chat={chat}
+          search={search}
+          profiles={profiles}
+          onFirstSend={enterChat}
+        />
+      );
     }
     return (
-      <ZimaMobileSearch chat={chat} search={search} onFirstSend={enterChat} />
+      <ZimaMobileSearch
+        chat={chat}
+        search={search}
+        profiles={profiles}
+        onFirstSend={enterChat}
+      />
     );
   }
 
@@ -51,15 +69,6 @@ export function ZimaShell({ isChatMode, onChatModeChange }: ZimaShellProps) {
               chat={chat}
               search={search}
             />
-          </div>
-        </div>
-        <div
-          className={`mx-auto w-full shrink-0 bg-white ${ZIMA_LANDING_SEARCH_WIDTH}`}
-        >
-          <div className="px-6">
-            <div className="mx-auto w-[85%]">
-              <ZimaMakeathonBanner />
-            </div>
           </div>
         </div>
       </div>

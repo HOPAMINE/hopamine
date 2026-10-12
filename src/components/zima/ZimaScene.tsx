@@ -4,9 +4,10 @@ import { useRef, useState } from "react";
 import type { GlobeHandle } from "./Globe";
 import type { GlobeView } from "./camera";
 import ZimaChrome from "./chrome/ZimaChrome";
-import ResultMarkers from "./ResultMarkers";
+import { GlobePeople } from "./GlobePeople";
 import { SearchProvider, useSearch } from "./search";
 import { ZimaGlobeBackdrop } from "./ZimaGlobeBackdrop";
+import { useZimaGlobeProfiles } from "@/app/zima/useZimaGlobeProfiles";
 
 /**
  * Where a sent message takes the camera for now: The Spiral at Hudson Yards,
@@ -39,6 +40,7 @@ function Scene() {
   const globeRef = useRef<GlobeHandle>(null);
   const [mapHeld, setMapHeld] = useState(false);
   const search = useSearch();
+  const profiles = useZimaGlobeProfiles();
 
   const handleSend = (text: string) => {
     search.send(text);
@@ -48,7 +50,7 @@ function Scene() {
   return (
     <>
       <ZimaGlobeBackdrop ref={globeRef} onHoldChange={setMapHeld}>
-        {search.hasSearched && <ResultMarkers results={[]} />}
+        <GlobePeople profiles={profiles} />
       </ZimaGlobeBackdrop>
       <ZimaChrome onSend={handleSend} mapHeld={mapHeld} />
     </>

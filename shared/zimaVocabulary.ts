@@ -4,6 +4,45 @@
  * so both sides must read from here.
  */
 export const ZIMA_ARCHETYPES = [
+  "Scientist",
+  "Creator",
+  "Filmmaker",
+  "Writer",
+  "Technologist",
+  "Builder",
+  "Farmer",
+  "Designer",
+  "Developer",
+  "Artist",
+  "Policy maker",
+  "Community builder",
+  "Engineer",
+  "Researcher",
+  "Founder",
+  "Educator",
+  "Journalist",
+  "Photographer",
+  "Musician",
+  "Architect",
+  "Organizer",
+  "Activist",
+  "Chef",
+  "Maker",
+  "Inventor",
+  "Student",
+  "Poet",
+  "Producer",
+  "Animator",
+  "Illustrator",
+  "Urbanist",
+  "Ecologist",
+  "Gardener",
+  "Curator",
+  "Hacker",
+] as const;
+
+/** Chips on the onboarding step. Profiles and search use the full list. */
+export const ZIMA_ONBOARD_ARCHETYPES = [
   "Builder",
   "Farmer",
   "Filmmaker",
@@ -14,7 +53,7 @@ export const ZIMA_ARCHETYPES = [
   "Policy maker",
   "Creator",
   "Community builder",
-] as const;
+] as const satisfies readonly (typeof ZIMA_ARCHETYPES)[number][];
 
 export const ZIMA_PRIMARY_INTERESTS = [
   "Civic",
@@ -56,6 +95,48 @@ export function normalizeZimaTag(value: string): string {
     .filter(Boolean)
     .map((word) => (word.length > 3 ? word.replace(/s$/, "") : word))
     .join(" ");
+}
+
+/** Canonical label when `raw` matches the list, otherwise the trimmed text. */
+export function canonicalZimaArchetype(raw: string): string | null {
+  const trimmed = raw.trim().replace(/\s+/g, " ");
+  if (!trimmed || trimmed.length > 40) return null;
+  const match = ZIMA_ARCHETYPES.find(
+    (option) => option.toLowerCase() === trimmed.toLowerCase(),
+  );
+  return match ?? trimmed;
+}
+
+/** Adds a typed archetype, skipping blanks and duplicates. */
+export function addZimaArchetype(current: readonly string[], raw: string): string[] {
+  const label = canonicalZimaArchetype(raw);
+  if (!label) return [...current];
+  if (current.some((item) => item.toLowerCase() === label.toLowerCase())) {
+    return [...current];
+  }
+  return [...current, label];
+}
+
+/**
+ * Archetypes saved on the profile, or the onboarding list stored in skills
+ * before the profile field existed.
+ */
+export function profileArchetypes(user: {
+  archetypes?: string[];
+  skills?: string[];
+}): string[] {
+  const source = user.archetypes !== undefined ? user.archetypes : (user.skills ?? []);
+  const seen = new Set<string>();
+  const labels: string[] = [];
+  for (const item of source) {
+    const label = canonicalZimaArchetype(item);
+    if (!label) continue;
+    const key = label.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    labels.push(label);
+  }
+  return labels;
 }
 
 /** True when any of the user's saved tags equals any of the selected chips, or no chips are selected. */

@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { GlobePeople } from "@/components/zima/GlobePeople";
 import { ZimaGlobeBackdrop } from "@/components/zima/ZimaGlobeBackdrop";
 import { ZimaLogo } from "./ZimaLogo";
 import { ZIMA_FIXED_LOGO_TOP_LEFT } from "./zimaLogoPlacement";
+import { useZimaGlobeProfiles } from "./useZimaGlobeProfiles";
 import { useZimaSearchChrome } from "./ZimaSearchChromeContext";
 import { ZimaShell } from "./ZimaShell";
 
 export function ZimaPageClient() {
   const [isChatMode, setIsChatMode] = useState(false);
+  const profiles = useZimaGlobeProfiles();
   const { setHideMobileTopProfile } = useZimaSearchChrome();
 
   useEffect(() => {
@@ -22,7 +25,9 @@ export function ZimaPageClient() {
         <ZimaGlobeBackdrop
           extendUnderTopChrome
           className="pointer-events-none z-0 bg-white"
-        />
+        >
+          <GlobePeople profiles={profiles} />
+        </ZimaGlobeBackdrop>
       ) : null}
       {!isChatMode ? (
         <ZimaLogo
@@ -40,7 +45,11 @@ export function ZimaPageClient() {
           />
         </div>
       )}
-      <ZimaShell isChatMode={isChatMode} onChatModeChange={setIsChatMode} />
+      <ZimaShell
+        isChatMode={isChatMode}
+        onChatModeChange={setIsChatMode}
+        profiles={profiles}
+      />
     </div>
   );
 }

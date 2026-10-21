@@ -25,7 +25,7 @@ import { normalizeOptionalProjectUrl } from "../../../convex/lib/projectUrls";
 import {
   ZIMA_CONTRIBUTE_INTENT,
   ZIMA_INTENTS,
-  ZIMA_ONBOARD_ARCHETYPES,
+  ZIMA_STORY_ARCHETYPES,
   canonicalZimaIntent,
 } from "../../../shared/zimaVocabulary";
 
@@ -49,10 +49,6 @@ const ASK_POSTAL_CODE = false;
 const ZIMA_DISCORD_INVITE = "https://discord.gg/4pH2UnxPBm";
 
 const onboardButtonClass = `${jetbrainsMono.className} text-[15px] font-semibold uppercase tracking-wide`;
-
-const OTHER_ARCHETYPE = "Other";
-
-const ARCHETYPES = [...ZIMA_ONBOARD_ARCHETYPES, OTHER_ARCHETYPE] as const;
 
 function ContinueButton({
   disabled,
@@ -212,7 +208,6 @@ export function ZimaOnboardClient() {
   const [linksError, setLinksError] = useState("");
   const [recentProject, setRecentProject] = useState("");
   const [archetypes, setArchetypes] = useState<string[]>([]);
-  const [otherArchetype, setOtherArchetype] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactEmailError, setContactEmailError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -309,12 +304,7 @@ export function ZimaOnboardClient() {
   }
 
   function selectedArchetypesForSave() {
-    return [
-      ...archetypes.filter((item) => item !== OTHER_ARCHETYPE),
-      ...(archetypes.includes(OTHER_ARCHETYPE) && otherArchetype.trim()
-        ? [otherArchetype.trim()]
-        : []),
-    ];
+    return archetypes;
   }
 
   function submitBuilder(event: FormEvent) {
@@ -564,43 +554,42 @@ export function ZimaOnboardClient() {
               />
             }
           >
-            <div className="grid grid-cols-2 gap-3">
-              {ARCHETYPES.map((option) => {
-                const selected = archetypes.includes(option);
+            <div className="flex flex-col gap-3">
+              {ZIMA_STORY_ARCHETYPES.map((option) => {
+                const selected = archetypes.includes(option.label);
                 return (
                   <button
-                    key={option}
+                    key={option.label}
                     type="button"
                     onClick={() =>
                       setArchetypes((current) =>
-                        current.includes(option)
-                          ? current.filter((item) => item !== option)
-                          : [...current, option],
+                        current.includes(option.label)
+                          ? current.filter((item) => item !== option.label)
+                          : [...current, option.label],
                       )
                     }
-                    className={`${onboardButtonClass} flex min-h-12 items-center justify-center rounded-xl px-3 py-3 text-center text-[13px] leading-tight transition-colors ${
-                      option === OTHER_ARCHETYPE ? "col-span-2" : ""
-                    } ${
+                    className={`flex w-full flex-col items-start gap-1 rounded-xl border px-4 py-3 text-left transition-colors ${
                       selected
-                        ? "border border-transparent bg-[#00a6f3] text-white"
-                        : "border border-neutral-200 bg-white text-neutral-900"
+                        ? "border-transparent bg-[#00a6f3] text-white"
+                        : "border-neutral-200 bg-white text-neutral-900"
                     }`}
                   >
-                    {option}
+                    <span
+                      className={`${jetbrainsMono.className} text-[14px] font-semibold uppercase tracking-wide`}
+                    >
+                      {option.emoji} {option.label}
+                    </span>
+                    <span
+                      className={`${jetbrainsMono.className} text-[13px] leading-snug ${
+                        selected ? "text-white/90" : "text-neutral-600"
+                      }`}
+                    >
+                      {option.description}
+                    </span>
                   </button>
                 );
               })}
             </div>
-            {archetypes.includes(OTHER_ARCHETYPE) ? (
-              <input
-                id="zima-onboard-archetype-other"
-                value={otherArchetype}
-                onChange={(event) => setOtherArchetype(event.target.value)}
-                placeholder="Your archetype"
-                aria-label="Your archetype"
-                className={inputClass}
-              />
-            ) : null}
           </OnboardStepForm>
         ) : null}
 

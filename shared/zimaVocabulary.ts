@@ -3,7 +3,8 @@
  * saves these labels on the user, and the search filters match against them,
  * so both sides must read from here.
  */
-export const ZIMA_ARCHETYPES = [
+/** Previous chips. Kept so older profiles still resolve, and hidden from the pickers. */
+export const ZIMA_LEGACY_ARCHETYPES = [
   "Scientist",
   "Creator",
   "Filmmaker",
@@ -41,19 +42,64 @@ export const ZIMA_ARCHETYPES = [
   "Hacker",
 ] as const;
 
-/** Chips on the onboarding step. Profiles and search use the full list. */
-export const ZIMA_ONBOARD_ARCHETYPES = [
-  "Builder",
-  "Farmer",
-  "Filmmaker",
-  "Writer",
-  "Designer",
-  "Developer",
-  "Artist",
-  "Policy maker",
-  "Creator",
-  "Community builder",
-] as const satisfies readonly (typeof ZIMA_ARCHETYPES)[number][];
+export const ZIMA_STORY_ARCHETYPES = [
+  {
+    emoji: "🌱",
+    label: "The Seedcaster",
+    description: "They plant what others haven't imagined yet.",
+  },
+  {
+    emoji: "⚙️",
+    label: "The Fabricant",
+    description: "If it doesn't exist, they build it.",
+  },
+  {
+    emoji: "🍄",
+    label: "The Mycelian",
+    description: "They think in networks and grow in the dark.",
+  },
+  {
+    emoji: "🏗️",
+    label: "The Terraformer",
+    description: "They redesign the spaces we inhabit.",
+  },
+  {
+    emoji: "💻",
+    label: "The Developer",
+    description: "They write the tools of sovereignty.",
+  },
+  {
+    emoji: "🎨",
+    label: "The Artisan",
+    description: "They make the future beautiful enough to want.",
+  },
+  {
+    emoji: "📡",
+    label: "The Chronicler",
+    description: "They make sure the work gets seen.",
+  },
+  {
+    emoji: "🌿",
+    label: "The Cultivar",
+    description: "They bridge the lab and the land.",
+  },
+  {
+    emoji: "🔗",
+    label: "The Loomkeeper",
+    description: "They hold the network together.",
+  },
+  {
+    emoji: "📜",
+    label: "The Verdant",
+    description: "They change the rules of the game.",
+  },
+] as const;
+
+/** Labels shown in onboarding, search, and profile editing. */
+export const ZIMA_ARCHETYPES = ZIMA_STORY_ARCHETYPES.map((archetype) => archetype.label);
+
+/** Chips on the onboarding step. */
+export const ZIMA_ONBOARD_ARCHETYPES = ZIMA_ARCHETYPES;
 
 export const ZIMA_PRIMARY_INTERESTS = [
   "Civic",
@@ -117,7 +163,7 @@ export function normalizeZimaTag(value: string): string {
 export function canonicalZimaArchetype(raw: string): string | null {
   const trimmed = raw.trim().replace(/\s+/g, " ");
   if (!trimmed || trimmed.length > 40) return null;
-  const match = ZIMA_ARCHETYPES.find(
+  const match = [...ZIMA_ARCHETYPES, ...ZIMA_LEGACY_ARCHETYPES].find(
     (option) => option.toLowerCase() === trimmed.toLowerCase(),
   );
   return match ?? trimmed;

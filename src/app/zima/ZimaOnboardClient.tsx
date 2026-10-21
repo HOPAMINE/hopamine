@@ -44,6 +44,8 @@ const STEP_BIO = 10;
 const STEP_CONTACT = 11;
 const ONBOARD_LAST_STEP = STEP_CONTACT;
 const ONBOARD_STEP_COUNT = ONBOARD_LAST_STEP + 1;
+/** Postal code stays in the flow, but we are not asking for it yet. */
+const ASK_POSTAL_CODE = false;
 const ZIMA_DISCORD_INVITE = "https://discord.gg/4pH2UnxPBm";
 
 const onboardButtonClass = `${jetbrainsMono.className} text-[15px] font-semibold uppercase tracking-wide`;
@@ -90,9 +92,12 @@ function OnboardProgressHeader({
   onBack: () => void;
   onExit: () => void;
 }) {
-  const totalSteps = includeHelpStep ? ONBOARD_STEP_COUNT : ONBOARD_STEP_COUNT - 1;
-  const displayStep =
-    !includeHelpStep && step > STEP_HELP_WITH ? step - 1 : step;
+  let totalSteps = ONBOARD_STEP_COUNT;
+  if (!includeHelpStep) totalSteps -= 1;
+  if (!ASK_POSTAL_CODE) totalSteps -= 1;
+  let displayStep = step;
+  if (!ASK_POSTAL_CODE && step > STEP_POSTAL) displayStep -= 1;
+  if (!includeHelpStep && step > STEP_HELP_WITH) displayStep -= 1;
   const progressPercent = ((displayStep + 1) / totalSteps) * 100;
 
   return (
@@ -262,6 +267,9 @@ export function ZimaOnboardClient() {
   function goNext() {
     setSubmitError("");
     setStep((current) => {
+      if (!ASK_POSTAL_CODE && current === STEP_CITY) {
+        return STEP_ARCHETYPE;
+      }
       if (current === STEP_INTENT && zimaIntent !== ZIMA_CONTRIBUTE_INTENT) {
         return STEP_LINKS;
       }
@@ -272,6 +280,9 @@ export function ZimaOnboardClient() {
   function goBack() {
     setSubmitError("");
     setStep((current) => {
+      if (!ASK_POSTAL_CODE && current === STEP_ARCHETYPE) {
+        return STEP_CITY;
+      }
       if (current === STEP_LINKS && zimaIntent !== ZIMA_CONTRIBUTE_INTENT) {
         return STEP_INTENT;
       }
@@ -383,7 +394,7 @@ export function ZimaOnboardClient() {
     setContactEmailError("");
     if (
       !location.trim() ||
-      !isPostalCode(postalCode) ||
+      (ASK_POSTAL_CODE && !isPostalCode(postalCode)) ||
       !canonicalZimaIntent(zimaIntent) ||
       !recentProject.trim() ||
       (zimaIntent === ZIMA_CONTRIBUTE_INTENT && !zimaHelpWith.trim())
@@ -409,7 +420,9 @@ export function ZimaOnboardClient() {
       await completeZimaOnboarding({
         name: name.trim(),
         username: username.trim() || undefined,
-        location: `${location.trim()}, ${postalCode.trim().replace(/\s+/g, " ")}`,
+        location: ASK_POSTAL_CODE
+          ? `${location.trim()}, ${postalCode.trim().replace(/\s+/g, " ")}`
+          : location.trim(),
         bio: bio.trim() || undefined,
         nowPlaying: workingOn.trim() || undefined,
         zimaIntent,
@@ -513,7 +526,7 @@ export function ZimaOnboardClient() {
           </OnboardStepForm>
         ) : null}
 
-        {step === STEP_POSTAL ? (
+        {ASK_POSTAL_CODE && step === STEP_POSTAL ? (
           <OnboardStepForm
             title="What is your postal code?"
             onSubmit={submitPostal}

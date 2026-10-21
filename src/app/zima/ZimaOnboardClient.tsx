@@ -5,7 +5,6 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import {
   useEffect,
-  useMemo,
   useState,
   type FormEvent,
   type ReactNode,
@@ -16,7 +15,6 @@ import {
   hasCompletedZimaOnboarding,
 } from "@/lib/zima/onboarding";
 import { getZimaAuthHref, getZimaPath } from "@/lib/zima/routes";
-import { suggestNycNeighborhoods } from "@/lib/zima/nycNeighborhoods";
 import { jetbrainsMono, newsreader } from "../../../fonts";
 import {
   ZimaAuthError,
@@ -32,10 +30,9 @@ import {
 } from "../../../shared/zimaVocabulary";
 
 const HOPAMINE_BLUE = "#00a6f3";
-const NYC_CITY = "New York City";
 const STEP_NAME = 0;
 const STEP_CITY = 1;
-const STEP_NEIGHBORHOOD = 2;
+const STEP_POSTAL = 2;
 const STEP_ARCHETYPE = 3;
 const STEP_WORKING_ON = 4;
 const STEP_INTENT = 5;
@@ -74,25 +71,28 @@ function ContinueButton({
   );
 }
 
+function isPostalCode(value: string) {
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  return (
+    /^[A-Za-z0-9](?:[A-Za-z0-9]|[ -](?=[A-Za-z0-9])){1,10}$/.test(trimmed) &&
+    /\d/.test(trimmed)
+  );
+}
+
 function OnboardProgressHeader({
   step,
-  cityChoice,
   includeHelpStep,
   onBack,
   onExit,
 }: {
   step: number;
-  cityChoice: "nyc" | "other" | null;
   includeHelpStep: boolean;
   onBack: () => void;
   onExit: () => void;
 }) {
-  let totalSteps = ONBOARD_STEP_COUNT;
-  if (cityChoice !== "nyc") totalSteps -= 1;
-  if (!includeHelpStep) totalSteps -= 1;
-  let displayStep = step;
-  if (cityChoice !== "nyc" && step > STEP_NEIGHBORHOOD) displayStep -= 1;
-  if (!includeHelpStep && step > STEP_HELP_WITH) displayStep -= 1;
+  const totalSteps = includeHelpStep ? ONBOARD_STEP_COUNT : ONBOARD_STEP_COUNT - 1;
+  const displayStep =
+    !includeHelpStep && step > STEP_HELP_WITH ? step - 1 : step;
   const progressPercent = ((displayStep + 1) / totalSteps) * 100;
 
   return (
@@ -197,10 +197,8 @@ export function ZimaOnboardClient() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
-  const [location, setLocation] = useState(NYC_CITY);
-  const [cityChoice, setCityChoice] = useState<"nyc" | "other" | null>("nyc");
-  const [neighborhood, setNeighborhood] = useState("");
-  const [neighborhoodOpen, setNeighborhoodOpen] = useState(false);
+  const [location, setLocation] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [bio, setBio] = useState("");
   const [workingOn, setWorkingOn] = useState("");
   const [zimaIntent, setZimaIntent] = useState("");
@@ -261,17 +259,9 @@ export function ZimaOnboardClient() {
     setPrefilled(true);
   }, [convexUser, prefilled, user?.fullName, user?.primaryEmailAddress?.emailAddress]);
 
-  const neighborhoodSuggestions = useMemo(
-    () => suggestNycNeighborhoods(neighborhood),
-    [neighborhood],
-  );
-
   function goNext() {
     setSubmitError("");
     setStep((current) => {
-      if (current === STEP_CITY && cityChoice !== "nyc") {
-        return STEP_ARCHETYPE;
-      }
       if (current === STEP_INTENT && zimaIntent !== ZIMA_CONTRIBUTE_INTENT) {
         return STEP_LINKS;
       }
@@ -282,9 +272,6 @@ export function ZimaOnboardClient() {
   function goBack() {
     setSubmitError("");
     setStep((current) => {
-      if (current === STEP_ARCHETYPE && cityChoice !== "nyc") {
-        return STEP_CITY;
-      }
       if (current === STEP_LINKS && zimaIntent !== ZIMA_CONTRIBUTE_INTENT) {
         return STEP_INTENT;
       }
@@ -300,19 +287,13 @@ export function ZimaOnboardClient() {
 
   function submitPlace(event: FormEvent) {
     event.preventDefault();
-    if (cityChoice === "nyc") {
-      goNext();
-      return;
-    }
-    if (cityChoice === "other" && location.trim()) {
-      setNeighborhood("");
-      goNext();
-    }
+    if (!location.trim()) return;
+    goNext();
   }
 
-  function submitNeighborhood(event: FormEvent) {
+  function submitPostal(event: FormEvent) {
     event.preventDefault();
-    if (!neighborhood.trim()) return;
+    if (!isPostalCode(postalCode)) return;
     goNext();
   }
 
@@ -401,6 +382,8 @@ export function ZimaOnboardClient() {
     }
     setContactEmailError("");
     if (
+      !location.trim() ||
+      !isPostalCode(postalCode) ||
       !canonicalZimaIntent(zimaIntent) ||
       !recentProject.trim() ||
       (zimaIntent === ZIMA_CONTRIBUTE_INTENT && !zimaHelpWith.trim())
@@ -426,10 +409,7 @@ export function ZimaOnboardClient() {
       await completeZimaOnboarding({
         name: name.trim(),
         username: username.trim() || undefined,
-        location:
-          cityChoice === "nyc" && neighborhood.trim()
-            ? `${neighborhood.trim()}, ${NYC_CITY}`
-            : location.trim(),
+        location: `${location.trim()}, ${postalCode.trim().replace(/\s+/g, " ")}`,
         bio: bio.trim() || undefined,
         nowPlaying: workingOn.trim() || undefined,
         zimaIntent,
@@ -482,7 +462,6 @@ export function ZimaOnboardClient() {
     <div className="relative flex min-h-dvh flex-col bg-white">
       <OnboardProgressHeader
         step={step}
-        cityChoice={cityChoice}
         includeHelpStep={zimaIntent === ZIMA_CONTRIBUTE_INTENT}
         onBack={goBack}
         onExit={() => router.replace(searchHref)}
@@ -516,124 +495,47 @@ export function ZimaOnboardClient() {
           <OnboardStepForm
             title="What city do you live in?"
             onSubmit={submitPlace}
+            centerContent
             footer={
-              <ContinueButton
-                disabled={
-                  cityChoice === "nyc"
-                    ? false
-                    : cityChoice !== "other" || !location.trim()
-                }
-                label="Continue"
-              />
+              <ContinueButton disabled={!location.trim()} label="Continue" />
             }
           >
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setCityChoice("nyc");
-                  setLocation(NYC_CITY);
-                }}
-                className={`${onboardButtonClass} flex h-12 w-full items-center justify-center rounded-xl px-6 transition-colors ${
-                  cityChoice === "nyc"
-                    ? "border border-transparent bg-[#00a6f3] text-white"
-                    : "border border-neutral-200 bg-white text-neutral-900"
-                }`}
-              >
-                New York City
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCityChoice("other");
-                  setNeighborhood("");
-                  setLocation((current) =>
-                    current === NYC_CITY ? "" : current,
-                  );
-                }}
-                className={`${onboardButtonClass} flex h-12 w-full items-center justify-center rounded-xl px-6 transition-colors ${
-                  cityChoice === "other"
-                    ? "border border-transparent bg-[#00a6f3] text-white"
-                    : "border border-neutral-200 bg-white text-neutral-900"
-                }`}
-              >
-                Other
-              </button>
-              {cityChoice === "other" ? (
-                <input
-                  id="zima-onboard-location"
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                  placeholder="Your city"
-                  required
-                  autoComplete="address-level2"
-                  aria-label="Your city"
-                  className={inputClass}
-                />
-              ) : null}
-            </div>
+            <input
+              id="zima-onboard-location"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              placeholder="Your city"
+              required
+              autoComplete="address-level2"
+              aria-label="Your city"
+              className={inputClass}
+            />
           </OnboardStepForm>
         ) : null}
 
-        {step === STEP_NEIGHBORHOOD ? (
+        {step === STEP_POSTAL ? (
           <OnboardStepForm
-            title="What neighborhood are you from in NYC?"
-            onSubmit={submitNeighborhood}
+            title="What is your postal code?"
+            onSubmit={submitPostal}
+            centerContent
             footer={
               <ContinueButton
-                disabled={!neighborhood.trim()}
+                disabled={!isPostalCode(postalCode)}
                 label="Continue"
               />
             }
           >
-            <div className="relative">
-              <input
-                id="zima-onboard-neighborhood"
-                value={neighborhood}
-                onChange={(event) => {
-                  setNeighborhood(event.target.value);
-                  setNeighborhoodOpen(true);
-                }}
-                onFocus={() => setNeighborhoodOpen(true)}
-                onBlur={() => {
-                  window.setTimeout(() => setNeighborhoodOpen(false), 120);
-                }}
-                placeholder="Start typing a neighborhood"
-                required
-                autoComplete="off"
-                role="combobox"
-                aria-expanded={neighborhoodOpen}
-                aria-controls="zima-onboard-neighborhood-list"
-                aria-autocomplete="list"
-                aria-label="Neighborhood in New York City"
-                className={inputClass}
-              />
-              {neighborhoodOpen && neighborhoodSuggestions.length > 0 ? (
-                <ul
-                  id="zima-onboard-neighborhood-list"
-                  role="listbox"
-                  className="absolute z-20 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-neutral-200 bg-white py-1 shadow-sm"
-                >
-                  {neighborhoodSuggestions.map((option) => (
-                    <li key={option} role="option" aria-selected={neighborhood === option}>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => {
-                          setNeighborhood(option);
-                          setNeighborhoodOpen(false);
-                        }}
-                        className={`${jetbrainsMono.className} w-full px-5 py-2.5 text-left text-[14px] text-neutral-800 hover:bg-neutral-100 ${
-                          neighborhood === option ? "bg-neutral-100" : ""
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
+            <input
+              id="zima-onboard-postal"
+              value={postalCode}
+              onChange={(event) => setPostalCode(event.target.value)}
+              placeholder="10001"
+              required
+              autoComplete="postal-code"
+              autoCapitalize="characters"
+              aria-label="Postal code"
+              className={inputClass}
+            />
           </OnboardStepForm>
         ) : null}
 

@@ -82,6 +82,22 @@ export const ZIMA_INTERESTS = [
   ...ZIMA_MORE_INTERESTS,
 ] as const;
 
+/** Why someone showed up, saved from Zima onboarding. */
+export const ZIMA_CONTRIBUTE_INTENT =
+  "Looking to contribute to a project" as const;
+
+export const ZIMA_INTENTS = [
+  ZIMA_CONTRIBUTE_INTENT,
+  "Looking for people to help me with a project",
+  "Looking to meet other builders",
+  "Just seeing what's out there",
+] as const;
+
+export function canonicalZimaIntent(raw: string): (typeof ZIMA_INTENTS)[number] | null {
+  const trimmed = raw.trim().replace(/\s+/g, " ");
+  return ZIMA_INTENTS.find((option) => option === trimmed) ?? null;
+}
+
 /**
  * Lowercases, strips punctuation and drops a trailing "s" from each word so
  * "Policy makers" saved by older onboarding still matches "Policy maker".

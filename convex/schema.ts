@@ -32,6 +32,14 @@ export default defineSchema({
     learning: v.optional(v.string()),
     availability: v.optional(v.array(availabilitySlot)),
     nowPlaying: v.optional(v.string()),
+    /** Why they joined, from the Zima onboarding choices. */
+    zimaIntent: v.optional(v.string()),
+    /** Work they want to help with, when they came to contribute. */
+    zimaHelpWith: v.optional(v.string()),
+    /** GitHub, site, and portfolio URLs collected during Zima onboarding. */
+    links: v.optional(v.array(v.string())),
+    /** A project they worked on recently, separate from what they are building now. */
+    recentProject: v.optional(v.string()),
     lastSeenAt: v.optional(v.number()),
     onboardingCompletedAt: v.optional(v.number()),
     zimaOnboardingCompletedAt: v.optional(v.number()),

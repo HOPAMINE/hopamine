@@ -8,13 +8,27 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import { normalizeOptionalProjectUrl } from "./lib/projectUrls";
 import { generateUniqueUsername, resolveUsernameForUser } from "./lib/usernames";
+import { ZIMA_CONTRIBUTE_INTENT, canonicalZimaIntent } from "../shared/zimaVocabulary";
 
 function trimText(value: unknown): string {
   if (typeof value === "string") return value.trim();
   if (Array.isArray(value)) return value.map(String).join(", ").trim();
   if (value == null) return "";
   return String(value).trim();
+}
+
+function normalizeProfileLinks(values: string[]): string[] | undefined {
+  const links: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    const normalized = normalizeOptionalProjectUrl(trimmed);
+    if (!normalized || links.includes(normalized)) continue;
+    links.push(normalized);
+  }
+  return links.length > 0 ? links : undefined;
 }
 
 function normalizeSkills(value: unknown): string[] | undefined {
@@ -354,6 +368,10 @@ export const completeZimaOnboarding = mutation({
     location: v.string(),
     bio: v.optional(v.string()),
     nowPlaying: v.optional(v.string()),
+    zimaIntent: v.string(),
+    zimaHelpWith: v.optional(v.string()),
+    links: v.array(v.string()),
+    recentProject: v.string(),
     skills: v.array(v.string()),
     interests: v.optional(v.array(v.string())),
     contactEmail: v.string(),
@@ -395,6 +413,19 @@ export const completeZimaOnboarding = mutation({
       throw new Error("Enter a valid email address");
     }
 
+    const zimaIntent = canonicalZimaIntent(args.zimaIntent);
+    if (!zimaIntent) {
+      throw new Error("Choose what brings you to Zima");
+    }
+    const zimaHelpWith = trimText(args.zimaHelpWith);
+    if (zimaIntent === ZIMA_CONTRIBUTE_INTENT && !zimaHelpWith) {
+      throw new Error("Tell us what kind of work you'd like to help with");
+    }
+    const recentProject = trimText(args.recentProject);
+    if (!recentProject) {
+      throw new Error("Tell us about a project you've worked on recently");
+    }
+
     const now = Date.now();
     const patch: Record<string, unknown> = {
       name: args.name.trim(),
@@ -402,6 +433,11 @@ export const completeZimaOnboarding = mutation({
       location: args.location.trim(),
       bio: trimText(args.bio) || undefined,
       nowPlaying: trimText(args.nowPlaying) || undefined,
+      zimaIntent,
+      zimaHelpWith:
+        zimaIntent === ZIMA_CONTRIBUTE_INTENT ? zimaHelpWith : undefined,
+      links: normalizeProfileLinks(args.links),
+      recentProject,
       skills: normalizeSkills(args.skills),
       archetypes: normalizeSkills(args.skills),
       ...(args.interests !== undefined

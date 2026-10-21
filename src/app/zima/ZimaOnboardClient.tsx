@@ -23,7 +23,13 @@ import {
   zimaRoundedInputClass as inputClass,
   zimaRoundedTextareaClass as textareaClass,
 } from "./ZimaAuthUI";
-import { ZIMA_ONBOARD_ARCHETYPES } from "../../../shared/zimaVocabulary";
+import { normalizeOptionalProjectUrl } from "../../../convex/lib/projectUrls";
+import {
+  ZIMA_CONTRIBUTE_INTENT,
+  ZIMA_INTENTS,
+  ZIMA_ONBOARD_ARCHETYPES,
+  canonicalZimaIntent,
+} from "../../../shared/zimaVocabulary";
 
 const HOPAMINE_BLUE = "#00a6f3";
 const NYC_CITY = "New York City";
@@ -32,9 +38,16 @@ const STEP_CITY = 1;
 const STEP_NEIGHBORHOOD = 2;
 const STEP_ARCHETYPE = 3;
 const STEP_WORKING_ON = 4;
-const STEP_BIO = 5;
-const STEP_CONTACT = 6;
+const STEP_INTENT = 5;
+const STEP_HELP_WITH = 6;
+const STEP_LINKS = 7;
+const STEP_RECENT_PROJECT = 8;
+const STEP_DISCORD = 9;
+const STEP_BIO = 10;
+const STEP_CONTACT = 11;
 const ONBOARD_LAST_STEP = STEP_CONTACT;
+const ONBOARD_STEP_COUNT = ONBOARD_LAST_STEP + 1;
+const ZIMA_DISCORD_INVITE = "https://discord.gg/4pH2UnxPBm";
 
 const onboardButtonClass = `${jetbrainsMono.className} text-[15px] font-semibold uppercase tracking-wide`;
 
@@ -64,18 +77,22 @@ function ContinueButton({
 function OnboardProgressHeader({
   step,
   cityChoice,
+  includeHelpStep,
   onBack,
   onExit,
 }: {
   step: number;
   cityChoice: "nyc" | "other" | null;
+  includeHelpStep: boolean;
   onBack: () => void;
   onExit: () => void;
 }) {
-  const totalSteps = cityChoice === "nyc" ? 7 : 6;
-  const displayStep = cityChoice !== "nyc" && step > STEP_NEIGHBORHOOD
-    ? step - 1
-    : step;
+  let totalSteps = ONBOARD_STEP_COUNT;
+  if (cityChoice !== "nyc") totalSteps -= 1;
+  if (!includeHelpStep) totalSteps -= 1;
+  let displayStep = step;
+  if (cityChoice !== "nyc" && step > STEP_NEIGHBORHOOD) displayStep -= 1;
+  if (!includeHelpStep && step > STEP_HELP_WITH) displayStep -= 1;
   const progressPercent = ((displayStep + 1) / totalSteps) * 100;
 
   return (
@@ -148,7 +165,7 @@ function OnboardStepForm({
         {title}
       </h1>
       <div
-        className={`mt-5 flex shrink-0 flex-col gap-5 ${
+        className={`mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto ${
           centerContent
             ? "mx-auto w-full max-w-sm text-center [&_input]:text-center [&_label]:text-center"
             : ""
@@ -156,7 +173,6 @@ function OnboardStepForm({
       >
         {children}
       </div>
-      <div className="min-h-0 flex-1" aria-hidden />
       <div className="mt-auto shrink-0 space-y-4 pt-10 pb-[max(16px,env(safe-area-inset-bottom))]">
         {footer}
       </div>
@@ -187,6 +203,11 @@ export function ZimaOnboardClient() {
   const [neighborhoodOpen, setNeighborhoodOpen] = useState(false);
   const [bio, setBio] = useState("");
   const [workingOn, setWorkingOn] = useState("");
+  const [zimaIntent, setZimaIntent] = useState("");
+  const [zimaHelpWith, setZimaHelpWith] = useState("");
+  const [links, setLinks] = useState<string[]>([""]);
+  const [linksError, setLinksError] = useState("");
+  const [recentProject, setRecentProject] = useState("");
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [otherArchetype, setOtherArchetype] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -215,6 +236,20 @@ export function ZimaOnboardClient() {
     setUsername((current) => current || convexUser.username || "");
     setBio((current) => current || convexUser.bio || "");
     setWorkingOn((current) => current || convexUser.nowPlaying || "");
+    setZimaIntent((current) => {
+      if (current) return current;
+      return convexUser.zimaIntent && canonicalZimaIntent(convexUser.zimaIntent)
+        ? convexUser.zimaIntent
+        : "";
+    });
+    setZimaHelpWith((current) => current || convexUser.zimaHelpWith || "");
+    setLinks((current) => {
+      if (current.some((link) => link.trim())) return current;
+      return convexUser.links && convexUser.links.length > 0
+        ? convexUser.links
+        : [""];
+    });
+    setRecentProject((current) => current || convexUser.recentProject || "");
     setContactEmail(
       (current) =>
         current ||
@@ -237,6 +272,9 @@ export function ZimaOnboardClient() {
       if (current === STEP_CITY && cityChoice !== "nyc") {
         return STEP_ARCHETYPE;
       }
+      if (current === STEP_INTENT && zimaIntent !== ZIMA_CONTRIBUTE_INTENT) {
+        return STEP_LINKS;
+      }
       return Math.min(current + 1, ONBOARD_LAST_STEP);
     });
   }
@@ -246,6 +284,9 @@ export function ZimaOnboardClient() {
     setStep((current) => {
       if (current === STEP_ARCHETYPE && cityChoice !== "nyc") {
         return STEP_CITY;
+      }
+      if (current === STEP_LINKS && zimaIntent !== ZIMA_CONTRIBUTE_INTENT) {
+        return STEP_INTENT;
       }
       return Math.max(current - 1, STEP_NAME);
     });
@@ -302,6 +343,55 @@ export function ZimaOnboardClient() {
     goNext();
   }
 
+  function submitIntent(event: FormEvent) {
+    event.preventDefault();
+    if (!canonicalZimaIntent(zimaIntent)) return;
+    if (zimaIntent !== ZIMA_CONTRIBUTE_INTENT) setZimaHelpWith("");
+    goNext();
+  }
+
+  function submitHelpWith(event: FormEvent) {
+    event.preventDefault();
+    if (zimaIntent !== ZIMA_CONTRIBUTE_INTENT || !zimaHelpWith.trim()) return;
+    goNext();
+  }
+
+  function savedLinks() {
+    const normalized: string[] = [];
+    for (const link of links) {
+      const trimmed = link.trim();
+      if (!trimmed) continue;
+      const url = normalizeOptionalProjectUrl(trimmed);
+      if (!url || normalized.includes(url)) continue;
+      normalized.push(url);
+    }
+    return normalized;
+  }
+
+  function submitLinks(event: FormEvent) {
+    event.preventDefault();
+    try {
+      savedLinks();
+      setLinksError("");
+      goNext();
+    } catch (error) {
+      setLinksError(
+        error instanceof Error ? error.message : "Enter a valid link",
+      );
+    }
+  }
+
+  function submitRecentProject(event: FormEvent) {
+    event.preventDefault();
+    if (!recentProject.trim()) return;
+    goNext();
+  }
+
+  function submitDiscord(event: FormEvent) {
+    event.preventDefault();
+    goNext();
+  }
+
   async function finishOnboarding(event: FormEvent) {
     event.preventDefault();
     const trimmedEmail = contactEmail.trim();
@@ -310,7 +400,25 @@ export function ZimaOnboardClient() {
       return;
     }
     setContactEmailError("");
+    if (
+      !canonicalZimaIntent(zimaIntent) ||
+      !recentProject.trim() ||
+      (zimaIntent === ZIMA_CONTRIBUTE_INTENT && !zimaHelpWith.trim())
+    ) {
+      setSubmitError("Finish the earlier questions before entering Zima.");
+      return;
+    }
     if (!isAuthenticated || submitting) return;
+
+    let profileLinks: string[];
+    try {
+      profileLinks = savedLinks();
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Enter a valid link",
+      );
+      return;
+    }
 
     setSubmitting(true);
     setSubmitError("");
@@ -324,6 +432,13 @@ export function ZimaOnboardClient() {
             : location.trim(),
         bio: bio.trim() || undefined,
         nowPlaying: workingOn.trim() || undefined,
+        zimaIntent,
+        zimaHelpWith:
+          zimaIntent === ZIMA_CONTRIBUTE_INTENT
+            ? zimaHelpWith.trim()
+            : undefined,
+        links: profileLinks,
+        recentProject: recentProject.trim(),
         skills: selectedArchetypesForSave(),
         contactEmail: trimmedEmail,
       });
@@ -368,6 +483,7 @@ export function ZimaOnboardClient() {
       <OnboardProgressHeader
         step={step}
         cityChoice={cityChoice}
+        includeHelpStep={zimaIntent === ZIMA_CONTRIBUTE_INTENT}
         onBack={goBack}
         onExit={() => router.replace(searchHref)}
       />
@@ -591,6 +707,162 @@ export function ZimaOnboardClient() {
               aria-label="What you are working on"
               className={`${textareaClass} min-h-[160px]`}
             />
+          </OnboardStepForm>
+        ) : null}
+
+        {step === STEP_INTENT ? (
+          <OnboardStepForm
+            title="What brings you to Zima?"
+            onSubmit={submitIntent}
+            footer={
+              <ContinueButton
+                disabled={!canonicalZimaIntent(zimaIntent)}
+                label="Continue"
+              />
+            }
+          >
+            <div className="flex flex-col gap-3">
+              {ZIMA_INTENTS.map((option) => {
+                const selected = zimaIntent === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setZimaIntent(option)}
+                    className={`${onboardButtonClass} flex min-h-12 w-full items-center justify-center rounded-xl px-4 py-3 text-center text-[13px] leading-tight transition-colors ${
+                      selected
+                        ? "border border-transparent bg-[#00a6f3] text-white"
+                        : "border border-neutral-200 bg-white text-neutral-900"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+          </OnboardStepForm>
+        ) : null}
+
+        {step === STEP_HELP_WITH && zimaIntent === ZIMA_CONTRIBUTE_INTENT ? (
+          <OnboardStepForm
+            title="What kind of work would you like to help with?"
+            onSubmit={submitHelpWith}
+            footer={
+              <ContinueButton
+                disabled={!zimaHelpWith.trim()}
+                label="Continue"
+              />
+            }
+          >
+            <textarea
+              id="zima-onboard-help-with"
+              value={zimaHelpWith}
+              onChange={(event) => setZimaHelpWith(event.target.value)}
+              placeholder="I can help with website design, hardware design, gardening projects, software feedback"
+              rows={6}
+              required
+              aria-label="What kind of work you would like to help with"
+              className={`${textareaClass} min-h-[160px]`}
+            />
+          </OnboardStepForm>
+        ) : null}
+
+        {step === STEP_LINKS ? (
+          <OnboardStepForm
+            title="Links"
+            onSubmit={submitLinks}
+            footer={<ContinueButton disabled={false} label="Continue" />}
+          >
+            <div className="flex flex-col gap-3">
+              {links.map((link, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    id={index === 0 ? "zima-onboard-link" : undefined}
+                    value={link}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setLinks((current) =>
+                        current.map((item, itemIndex) =>
+                          itemIndex === index ? value : item,
+                        ),
+                      );
+                      setLinksError("");
+                    }}
+                    placeholder="GitHub, website, or portfolio"
+                    inputMode="url"
+                    autoComplete="url"
+                    aria-label={`Link ${index + 1}`}
+                    className={inputClass}
+                  />
+                  {links.length > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLinks((current) =>
+                          current.filter((_, itemIndex) => itemIndex !== index),
+                        )
+                      }
+                      aria-label={`Remove link ${index + 1}`}
+                      className={`${onboardButtonClass} inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-900`}
+                    >
+                      ×
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+              {links.length < 8 ? (
+                <button
+                  type="button"
+                  onClick={() => setLinks((current) => [...current, ""])}
+                  className={`${onboardButtonClass} flex h-12 w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-6 text-neutral-900`}
+                >
+                  Add another
+                </button>
+              ) : null}
+              {linksError ? <ZimaAuthError message={linksError} /> : null}
+            </div>
+          </OnboardStepForm>
+        ) : null}
+
+        {step === STEP_RECENT_PROJECT ? (
+          <OnboardStepForm
+            title="What's a project you've worked on recently?"
+            onSubmit={submitRecentProject}
+            footer={
+              <ContinueButton
+                disabled={!recentProject.trim()}
+                label="Continue"
+              />
+            }
+          >
+            <textarea
+              id="zima-onboard-recent-project"
+              value={recentProject}
+              onChange={(event) => setRecentProject(event.target.value)}
+              placeholder="Something you shipped, built, or helped with."
+              rows={6}
+              required
+              aria-label="A project you've worked on recently"
+              className={`${textareaClass} min-h-[160px]`}
+            />
+          </OnboardStepForm>
+        ) : null}
+
+        {step === STEP_DISCORD ? (
+          <OnboardStepForm
+            title="Join the Discord"
+            onSubmit={submitDiscord}
+            footer={<ContinueButton disabled={false} label="Continue" />}
+          >
+            <a
+              href={ZIMA_DISCORD_INVITE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${onboardButtonClass} flex h-12 w-full items-center justify-center rounded-xl px-6 text-white`}
+              style={{ backgroundColor: HOPAMINE_BLUE }}
+            >
+              Join the Discord
+            </a>
           </OnboardStepForm>
         ) : null}
 

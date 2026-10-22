@@ -3,6 +3,7 @@
 import { useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import { useHexLoadTransition } from "@/components/zima/hexload/HexLoadTransition";
 import {
   useEffect,
   useState,
@@ -190,6 +191,7 @@ export function ZimaOnboardClient() {
   );
   const completeZimaOnboarding = useMutation(api.users.completeZimaOnboarding);
   const router = useRouter();
+  const { coverAndNavigate } = useHexLoadTransition();
 
   const [searchHref, setSearchHref] = useState("/zima/search");
   const [signInHref, setSignInHref] = useState(
@@ -407,25 +409,28 @@ export function ZimaOnboardClient() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      await completeZimaOnboarding({
-        name: name.trim(),
-        username: username.trim() || undefined,
-        location: ASK_POSTAL_CODE
-          ? `${location.trim()}, ${postalCode.trim().replace(/\s+/g, " ")}`
-          : location.trim(),
-        bio: bio.trim() || undefined,
-        nowPlaying: workingOn.trim() || undefined,
-        zimaIntent,
-        zimaHelpWith:
-          zimaIntent === ZIMA_CONTRIBUTE_INTENT
-            ? zimaHelpWith.trim()
-            : undefined,
-        links: profileLinks,
-        recentProject: recentProject.trim(),
-        skills: selectedArchetypesForSave(),
-        contactEmail: trimmedEmail,
+      await coverAndNavigate(searchHref, {
+        replace: true,
+        beforeNavigate: () =>
+          completeZimaOnboarding({
+            name: name.trim(),
+            username: username.trim() || undefined,
+            location: ASK_POSTAL_CODE
+              ? `${location.trim()}, ${postalCode.trim().replace(/\s+/g, " ")}`
+              : location.trim(),
+            bio: bio.trim() || undefined,
+            nowPlaying: workingOn.trim() || undefined,
+            zimaIntent,
+            zimaHelpWith:
+              zimaIntent === ZIMA_CONTRIBUTE_INTENT
+                ? zimaHelpWith.trim()
+                : undefined,
+            links: profileLinks,
+            recentProject: recentProject.trim(),
+            skills: selectedArchetypesForSave(),
+            contactEmail: trimmedEmail,
+          }),
       });
-      router.replace(searchHref);
     } catch (error) {
       setSubmitError(
         error instanceof Error

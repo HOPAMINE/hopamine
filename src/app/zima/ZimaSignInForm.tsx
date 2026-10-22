@@ -2,7 +2,8 @@
 
 import { useSignIn } from "@clerk/nextjs/legacy";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useHexLoadTransition } from "@/components/zima/hexload/HexLoadTransition";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   getZimaAuthHref,
@@ -22,7 +23,7 @@ import { useZimaAuthAlert } from "./ZimaAuthShell";
 export function ZimaSignInForm() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const { coverAndNavigate } = useHexLoadTransition();
   const hostname =
     typeof window === "undefined" ? "" : window.location.hostname;
   const redirectTo =
@@ -75,8 +76,9 @@ export function ZimaSignInForm() {
       });
 
       if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        router.push(redirectTo);
+        await coverAndNavigate(redirectTo, {
+          beforeNavigate: () => setActive({ session: result.createdSessionId }),
+        });
       } else {
         setError("Sign in failed. Please try again.");
       }

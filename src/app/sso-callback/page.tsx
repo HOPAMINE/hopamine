@@ -8,6 +8,10 @@ import {
   getLoadedClerkInstance,
 } from "@/lib/auth/ssoCallback";
 import { isZimaHost } from "@/lib/zima/domain";
+import {
+  clearHexLoadRevealOnArrival,
+  markHexLoadRevealOnArrival,
+} from "@/components/zima/hexload/HexLoadTransition";
 import { getZimaAuthHref } from "@/lib/zima/routes";
 
 function SSOCallbackContent() {
@@ -34,6 +38,8 @@ function SSOCallbackContent() {
       const clerk = getLoadedClerkInstance(wrapperClerk);
       const hostname = window.location.hostname;
       const isZima = isZimaHost(hostname);
+      // Clerk may navigate to the destination itself below, so the destination is flagged up front.
+      if (isZima) markHexLoadRevealOnArrival();
       const next =
         searchParams.get("redirect_url") ??
         searchParams.get("after_sign_in_url") ??
@@ -102,6 +108,7 @@ function SSOCallbackContent() {
 
       // No Hopamine account for this identity — clear OAuth state, then sign up.
       cancelled = true;
+      clearHexLoadRevealOnArrival();
       const noAccountUrl = isZima
         ? `${signUpUrl}?notice=no-account&redirect_url=${encodeURIComponent(next)}`
         : `/sign-up?notice=no-account&redirect_url=${encodeURIComponent(next)}`;

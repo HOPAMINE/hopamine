@@ -3,7 +3,8 @@
 import { useClerk } from "@clerk/nextjs";
 import { useSignUp } from "@clerk/nextjs/legacy";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useHexLoadTransition } from "@/components/zima/hexload/HexLoadTransition";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   getZimaAuthHref,
@@ -33,7 +34,7 @@ export function ZimaSignUpForm() {
   const { signOut } = useClerk();
   const { isLoaded, signUp, setActive } = useSignUp();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const { coverAndNavigate } = useHexLoadTransition();
   const hostname =
     typeof window === "undefined" ? "" : window.location.hostname;
   const destination =
@@ -99,8 +100,9 @@ export function ZimaSignUpForm() {
       const result = await signUp.create({ emailAddress: email, password });
 
       if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        router.push(destination);
+        await coverAndNavigate(destination, {
+          beforeNavigate: () => setActive({ session: result.createdSessionId }),
+        });
         return;
       }
 
@@ -146,8 +148,9 @@ export function ZimaSignUpForm() {
       });
 
       if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        router.push(destination);
+        await coverAndNavigate(destination, {
+          beforeNavigate: () => setActive({ session: result.createdSessionId }),
+        });
       } else {
         setError("That code didn't work. Please try again.");
       }

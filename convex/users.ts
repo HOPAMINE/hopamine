@@ -585,6 +585,32 @@ export const deleteAccount = mutation({
   },
 });
 
+/** Admin cleanup for test accounts: `npx convex run users:deleteByClerkId '{"clerkId":"user_..."}'`. The Clerk user itself must be deleted separately. */
+export const deleteByClerkId = internalMutation({
+  args: { clerkId: v.string() },
+  handler: async (ctx, { clerkId }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
+      .unique();
+    if (!user) return { deleted: false };
+
+    const presenceRows = await ctx.db
+      .query("presence")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+    for (const row of presenceRows) {
+      await ctx.db.delete(row._id);
+    }
+
+    if (user.avatarStorageId) {
+      await ctx.storage.delete(user.avatarStorageId);
+    }
+    await ctx.db.delete(user._id);
+    return { deleted: true, presenceRowsDeleted: presenceRows.length };
+  },
+});
+
 export const updateAvailability = mutation({
   args: {
     availability: v.array(v.object({ day: v.number(), period: v.number() })),

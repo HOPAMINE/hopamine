@@ -4,6 +4,8 @@ export type HexLoadAnimationOptions = {
   centerLogoSrc?: string;
   centerLogoWidthPx?: number;
   centerLogoHeightPx?: number;
+  /** The auth transition pops a white centre hexagon with the logo. The playground turns that off. */
+  showCenterMark?: boolean;
 };
 
 export type HexLoadAnimation = {
@@ -152,6 +154,7 @@ export function createHexLoadAnimation(
   const context = canvas.getContext("2d");
   const centerLogoWidthPx = options.centerLogoWidthPx ?? 0;
   const centerLogoHeightPx = options.centerLogoHeightPx ?? 0;
+  const showCenterMark = options.showCenterMark !== false;
   const centerLogoImage = options.centerLogoSrc ? new Image() : null;
   if (centerLogoImage && options.centerLogoSrc) {
     // `coverInstantly` draws a single frame; repaint it once the logo arrives so the centre hex is not blank.
@@ -252,8 +255,10 @@ export function createHexLoadAnimation(
         cell.color,
       );
     }
-    const centerPopProgress = clamp01((elapsedMs - CENTER_POP_START_MS) / CENTER_POP_MS);
-    drawCenterHex(easeOutBack(centerPopProgress), 1, clamp01(centerPopProgress / 0.4));
+    if (showCenterMark) {
+      const centerPopProgress = clamp01((elapsedMs - CENTER_POP_START_MS) / CENTER_POP_MS);
+      drawCenterHex(easeOutBack(centerPopProgress), 1, clamp01(centerPopProgress / 0.4));
+    }
   }
 
   function drawRevealingFrame(elapsedMs: number) {
@@ -270,9 +275,11 @@ export function createHexLoadAnimation(
         cell.color,
       );
     }
-    const centerTurnProgress = clamp01((elapsedMs - CENTER_TURN_DELAY_MS) / CENTER_TURN_MS);
-    if (centerTurnProgress < 1) {
-      drawCenterHex(1, cleanTurnWidthScale(centerTurnProgress), 1);
+    if (showCenterMark) {
+      const centerTurnProgress = clamp01((elapsedMs - CENTER_TURN_DELAY_MS) / CENTER_TURN_MS);
+      if (centerTurnProgress < 1) {
+        drawCenterHex(1, cleanTurnWidthScale(centerTurnProgress), 1);
+      }
     }
   }
 

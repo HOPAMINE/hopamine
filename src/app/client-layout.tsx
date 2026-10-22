@@ -54,13 +54,15 @@ export default function ClientLayout({
   const isZima =
     isZimaSite || pathname === "/zima" || pathname.startsWith("/zima/");
   const isPixel = pathname === "/pixel" || pathname.startsWith("/pixel/");
+  const isLoadingPlayground =
+    pathname === "/loading" || pathname.startsWith("/loading/");
   const isClaim = pathname === "/claim" || pathname.startsWith("/claim/");
   const isLanding = pathname === "/" && !isZimaSite;
   const isSsoCallback =
     pathname === "/sso-callback" || pathname.startsWith("/sso-callback/");
   const isSocial = pathname === "/social" || pathname.startsWith("/social/");
 
-  if (isHopathon || isZima || isPixel) {
+  if (isHopathon || isZima || isPixel || isLoadingPlayground) {
     if (isSocial) {
       return (
         <div className="h-dvh overflow-x-hidden overflow-y-auto bg-white">

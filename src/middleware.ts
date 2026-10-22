@@ -129,6 +129,7 @@ const isPublicRoute = createRouteMatcher([
   "/zima/onboard(.*)",
   "/api/zima(.*)",
   "/pixel(.*)",
+  "/loading(.*)",
   "/favicon.ico",
   "/icon.svg",
 ]);

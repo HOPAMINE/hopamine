@@ -8,6 +8,7 @@ import { useMap } from "./Globe";
 import { HOPAMINE_BLUE } from "./globePalettes";
 import { NYC_MIN_ZOOM } from "./nycRegion";
 import type { MapResult } from "./results";
+import { getMarkerAvatarSources } from "../../lib/zima/clerkAvatar";
 
 export type MarkerInput = MapResult & {
   /** Pixel offset from the lng/lat so people who share a city don't stack. */
@@ -227,9 +228,11 @@ function PersonMarker({
 }
 
 function AvatarFace({ result }: { result: MapResult }) {
-  const [failed, setFailed] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const isLogo = result.avatarUrl.startsWith("/");
-  if (!result.avatarUrl || failed) {
+  const hasFailed = failedUrl === result.avatarUrl;
+
+  if (!result.avatarUrl || hasFailed) {
     return (
       <span
         className={`${jetbrainsMono.className} flex h-full w-full items-center justify-center text-lg font-semibold text-neutral-500`}
@@ -239,13 +242,18 @@ function AvatarFace({ result }: { result: MapResult }) {
     );
   }
 
+  const sources = getMarkerAvatarSources(result.avatarUrl);
+
   return (
-    // Map markers sit in a MapLibre portal, outside next/image's loader.
+    // Direct Clerk CDN delivery with 1x/2x/3x srcSet avoids an extra Next.js optimization hop.
+    // Native <img> is retained for direct CDN requests; portals do not prevent next/image.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={result.avatarUrl}
+      src={sources.src}
+      srcSet={sources.srcSet}
       alt=""
-      onError={() => setFailed(true)}
+      decoding="async"
+      onError={() => setFailedUrl(result.avatarUrl)}
       className={`h-full w-full object-cover ${isLogo ? "object-contain p-2" : ""}`}
       style={isLogo ? undefined : { imageRendering: "pixelated" }}
     />

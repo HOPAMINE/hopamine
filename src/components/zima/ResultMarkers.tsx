@@ -8,7 +8,6 @@ import { useMap } from "./Globe";
 import { HOPAMINE_BLUE } from "./globePalettes";
 import { NYC_MIN_ZOOM } from "./nycRegion";
 import type { MapResult } from "./results";
-import { getMarkerAvatarSources } from "../../lib/zima/clerkAvatar";
 
 export type MarkerInput = MapResult & {
   /** Pixel offset from the lng/lat so people who share a city don't stack. */
@@ -225,6 +224,35 @@ function PersonMarker({
       <MapPinSpike selected={selected} />
     </button>
   );
+}
+
+function getMarkerAvatarSources(avatarUrl: string): { src: string; srcSet?: string } {
+  let url: URL;
+  try {
+    url = new URL(avatarUrl);
+  } catch {
+    return { src: avatarUrl };
+  }
+  if (
+    url.protocol !== "https:" ||
+    url.hostname !== "img.clerk.com" ||
+    url.port !== ""
+  ) {
+    return { src: avatarUrl };
+  }
+
+  url.searchParams.set("quality", "80");
+  url.searchParams.set("fit", "crop");
+  // Stable sizes cover the 76px card at 1x/2x/3x without changing on zoom.
+  const sources = [80, 160, 240].map((size) => {
+    url.searchParams.set("width", String(size));
+    url.searchParams.set("height", String(size));
+    return url.toString();
+  });
+  return {
+    src: sources[0],
+    srcSet: sources.map((src, index) => `${src} ${index + 1}x`).join(", "),
+  };
 }
 
 function AvatarFace({ result }: { result: MapResult }) {

@@ -4,26 +4,21 @@ import { useMutation } from "convex/react";
 import {
   useCallback,
   useEffect,
-  useId,
-  useMemo,
   useRef,
   useState,
   type FormEvent,
-  type KeyboardEvent,
 } from "react";
 import { ProfileAvatarUpload } from "../../../components/profile/ProfileAvatarUpload";
 import { api } from "../../../convex/_generated/api";
 import { jetbrainsMono } from "../../../fonts";
 import {
-  ZIMA_ARCHETYPES,
-  addZimaArchetype,
-} from "../../../shared/zimaVocabulary";
-import {
   ZimaAuthError,
   ZimaAuthField,
   ZimaAuthTextarea,
-  zimaRoundedInputClass,
 } from "./ZimaAuthUI";
+import { ZimaArchetypePicker } from "./ZimaArchetypePicker";
+import { ZimaLocationField } from "./ZimaLocationField";
+import { ZimaSkillsField } from "./ZimaSkillsField";
 
 const HOPAMINE_BLUE = "#00a6f3";
 const TEXT_SAVE_DELAY_MS = 500;
@@ -34,7 +29,12 @@ type ProfileDraft = {
   bio: string;
   location: string;
   archetypes: string[];
+  skills: string[];
 };
+
+function sameList(a: readonly string[], b: readonly string[]) {
+  return a.length === b.length && a.every((item, index) => item === b[index]);
+}
 
 function sameDraft(a: ProfileDraft, b: ProfileDraft) {
   return (
@@ -42,8 +42,8 @@ function sameDraft(a: ProfileDraft, b: ProfileDraft) {
     a.username === b.username &&
     a.bio === b.bio &&
     a.location === b.location &&
-    a.archetypes.length === b.archetypes.length &&
-    a.archetypes.every((item, index) => item === b.archetypes[index])
+    sameList(a.archetypes, b.archetypes) &&
+    sameList(a.skills, b.skills)
   );
 }
 
@@ -54,156 +54,14 @@ export type ZimaProfileData = {
   bio?: string;
   location?: string;
   archetypes: string[];
+  /** Freeform skills the user adds (not archetype labels). */
+  skills: string[];
 };
 
 type ZimaProfileEditModalProps = {
   user: ZimaProfileData;
   onClose: () => void;
 };
-
-function ZimaArchetypeField({
-  value,
-  draft,
-  onDraftChange,
-  onChange,
-}: {
-  value: string[];
-  draft: string;
-  onDraftChange: (draft: string) => void;
-  onChange: (archetypes: string[]) => void;
-}) {
-  const listId = useId();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-
-  const suggestions = useMemo(() => {
-    const query = draft.trim().toLowerCase();
-    const selected = new Set(value.map((item) => item.toLowerCase()));
-    return ZIMA_ARCHETYPES.filter((option) => {
-      if (selected.has(option.toLowerCase())) return false;
-      if (!query) return true;
-      return option.toLowerCase().includes(query);
-    });
-  }, [draft, value]);
-
-  const typedLabel = draft.trim().replace(/\s+/g, " ");
-  const canAddTyped =
-    typedLabel.length > 0 &&
-    !value.some((item) => item.toLowerCase() === typedLabel.toLowerCase()) &&
-    !suggestions.some((option) => option.toLowerCase() === typedLabel.toLowerCase());
-
-  useEffect(() => {
-    function onPointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, []);
-
-  function add(label: string) {
-    const next = addZimaArchetype(value, label);
-    if (next.length !== value.length) onChange(next);
-    onDraftChange("");
-    setOpen(false);
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter" || event.key === ",") {
-      event.preventDefault();
-      if (typedLabel) add(typedLabel);
-      return;
-    }
-    if (event.key === "Escape") {
-      if (open) {
-        event.preventDefault();
-        event.stopPropagation();
-        setOpen(false);
-      }
-    }
-  }
-
-  return (
-    <div ref={rootRef} className="space-y-2">
-      <label
-        htmlFor="zima-profile-archetype"
-        className={`${jetbrainsMono.className} text-[11px] font-semibold uppercase tracking-wide text-neutral-700`}
-      >
-        Archetypes
-      </label>
-      {value.length > 0 ? (
-        <ul className="flex flex-wrap gap-2">
-          {value.map((archetype) => (
-            <li key={archetype}>
-              <button
-                type="button"
-                onClick={() =>
-                  onChange(value.filter((item) => item !== archetype))
-                }
-                className={`${jetbrainsMono.className} inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-white`}
-                style={{ backgroundColor: HOPAMINE_BLUE }}
-                aria-label={`Remove ${archetype}`}
-              >
-                {archetype}
-                <span aria-hidden>×</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      <div className="relative">
-        <input
-          id="zima-profile-archetype"
-          value={draft}
-          onChange={(event) => {
-            onDraftChange(event.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={onKeyDown}
-          placeholder="Type an archetype"
-          aria-label="Archetype"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          autoComplete="off"
-          className={zimaRoundedInputClass}
-        />
-        {open && (suggestions.length > 0 || canAddTyped) ? (
-          <ul
-            id={listId}
-            role="listbox"
-            className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white py-1 shadow-none"
-          >
-            {suggestions.map((option) => (
-              <li key={option} role="option" aria-selected={false}>
-                <button
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => add(option)}
-                  className={`${jetbrainsMono.className} w-full px-5 py-2.5 text-left text-[14px] text-neutral-800 hover:bg-neutral-100`}
-                >
-                  {option}
-                </button>
-              </li>
-            ))}
-            {canAddTyped ? (
-              <li role="option" aria-selected={false}>
-                <button
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => add(typedLabel)}
-                  className={`${jetbrainsMono.className} w-full px-5 py-2.5 text-left text-[14px] text-neutral-800 hover:bg-neutral-100`}
-                >
-                  Add “{typedLabel}”
-                </button>
-              </li>
-            ) : null}
-          </ul>
-        ) : null}
-      </div>
-    </div>
-  );
-}
 
 export function ZimaProfileEditModal({
   user,
@@ -215,7 +73,7 @@ export function ZimaProfileEditModal({
   const [bio, setBio] = useState(user.bio ?? "");
   const [location, setLocation] = useState(user.location ?? "");
   const [archetypes, setArchetypes] = useState(user.archetypes);
-  const [archetypeDraft, setArchetypeDraft] = useState("");
+  const [skills, setSkills] = useState(user.skills);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -226,18 +84,24 @@ export function ZimaProfileEditModal({
     bio: user.bio ?? "",
     location: user.location ?? "",
     archetypes: user.archetypes,
+    skills: user.skills,
   });
   const draftRef = useRef<ProfileDraft>(savedDraft.current);
-  const archetypeDraftRef = useRef(archetypeDraft);
   const timerRef = useRef<number | null>(null);
   const saveChain = useRef(Promise.resolve());
   const closeLock = useRef(false);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
-  const draft: ProfileDraft = { name, username, bio, location, archetypes };
+  const draft: ProfileDraft = {
+    name,
+    username,
+    bio,
+    location,
+    archetypes,
+    skills,
+  };
   draftRef.current = draft;
-  archetypeDraftRef.current = archetypeDraft;
 
   const persistDraft = useCallback(
     async (snapshot: ProfileDraft) => {
@@ -256,7 +120,7 @@ export function ZimaProfileEditModal({
           bio: snapshot.bio.trim() || undefined,
           location: snapshot.location.trim() || undefined,
           archetypes: snapshot.archetypes,
-          skills: snapshot.archetypes,
+          skills: snapshot.skills,
         });
         savedDraft.current = snapshot;
         setError("");
@@ -277,26 +141,10 @@ export function ZimaProfileEditModal({
     [updateProfile],
   );
 
-  const enqueueSave = useCallback((commitArchetype = false) => {
+  const enqueueSave = useCallback(() => {
     let savedOk = true;
     const task = saveChain.current.then(async () => {
-      const current = draftRef.current;
-      const nextArchetypes = commitArchetype
-        ? addZimaArchetype(current.archetypes, archetypeDraftRef.current)
-        : current.archetypes;
-      const snapshot =
-        nextArchetypes === current.archetypes
-          ? current
-          : { ...current, archetypes: nextArchetypes };
-      if (
-        commitArchetype &&
-        nextArchetypes.length !== current.archetypes.length
-      ) {
-        setArchetypes(nextArchetypes);
-        setArchetypeDraft("");
-        draftRef.current = snapshot;
-        archetypeDraftRef.current = "";
-      }
+      const snapshot = draftRef.current;
       if (sameDraft(snapshot, savedDraft.current)) return;
       savedOk = await persistDraft(snapshot);
     });
@@ -316,21 +164,14 @@ export function ZimaProfileEditModal({
       timerRef.current = null;
     }
 
-    const pending = addZimaArchetype(
-      draftRef.current.archetypes,
-      archetypeDraftRef.current,
-    );
-    const snapshot =
-      pending.length === draftRef.current.archetypes.length
-        ? draftRef.current
-        : { ...draftRef.current, archetypes: pending };
+    const snapshot = draftRef.current;
 
     if (!snapshot.name.trim() || sameDraft(snapshot, savedDraft.current)) {
       onCloseRef.current();
       return;
     }
 
-    void enqueueSave(true).then((savedOk) => {
+    void enqueueSave().then((savedOk) => {
       if (!savedOk) {
         closeLock.current = false;
         return;
@@ -362,7 +203,7 @@ export function ZimaProfileEditModal({
         timerRef.current = null;
       }
     };
-  }, [archetypes, bio, enqueueSave, location, name, username]);
+  }, [archetypes, bio, enqueueSave, location, name, skills, username]);
 
   useEffect(() => {
     function handleKeyDown(event: globalThis.KeyboardEvent) {
@@ -390,7 +231,7 @@ export function ZimaProfileEditModal({
       setSaved(false);
       return;
     }
-    void enqueueSave(true).then((savedOk) => {
+    void enqueueSave().then((savedOk) => {
       if (savedOk) onCloseRef.current();
     });
   }
@@ -474,14 +315,11 @@ export function ZimaProfileEditModal({
               autoComplete="username"
             />
 
-            <ZimaAuthField
+            <ZimaLocationField
               id="zima-profile-location"
-              label="Location"
-              variant="rounded"
               value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              placeholder="City, country"
-              autoComplete="address-level2"
+              onChange={setLocation}
+              placeholder="Type your city…"
             />
 
             <ZimaAuthTextarea
@@ -494,10 +332,15 @@ export function ZimaProfileEditModal({
               rows={4}
             />
 
-            <ZimaArchetypeField
+            <ZimaSkillsField
+              id="zima-profile-skills"
+              value={skills}
+              onChange={setSkills}
+            />
+
+            <ZimaArchetypePicker
+              id="zima-profile-archetypes"
               value={archetypes}
-              draft={archetypeDraft}
-              onDraftChange={setArchetypeDraft}
               onChange={setArchetypes}
             />
           </div>

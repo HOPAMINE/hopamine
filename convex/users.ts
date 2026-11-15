@@ -291,6 +291,24 @@ export const updateProfilePicture = mutation({
   },
 });
 
+const favoriteMovieValidator = v.object({
+  id: v.string(),
+  title: v.string(),
+  year: v.optional(v.string()),
+  posterUrl: v.optional(v.string()),
+  tmdbUrl: v.string(),
+});
+
+const favoriteMusicValidator = v.object({
+  id: v.string(),
+  title: v.string(),
+  artist: v.string(),
+  album: v.optional(v.string()),
+  artworkUrl: v.optional(v.string()),
+  previewUrl: v.optional(v.string()),
+  geniusUrl: v.optional(v.string()),
+});
+
 export const completeOnboarding = mutation({
   args: {
     name: v.string(),
@@ -301,6 +319,8 @@ export const completeOnboarding = mutation({
     vision: v.string(),
     why: v.string(),
     learning: v.optional(v.string()),
+    favoriteMovies: v.optional(v.array(favoriteMovieValidator)),
+    favoriteMusic: v.optional(v.array(favoriteMusicValidator)),
     discord: v.optional(v.string()),
   },
   returns: v.object({
@@ -351,6 +371,12 @@ export const completeOnboarding = mutation({
       vision: args.vision.trim(),
       why: args.why.trim(),
       learning: args.learning?.trim() || undefined,
+      ...(args.favoriteMovies && args.favoriteMovies.length > 0
+        ? { favoriteMovies: args.favoriteMovies }
+        : {}),
+      ...(args.favoriteMusic && args.favoriteMusic.length > 0
+        ? { favoriteMusic: args.favoriteMusic }
+        : {}),
       ...(socialLinks !== undefined ? { socialLinks } : {}),
       onboardingCompletedAt: Date.now(),
       updatedAt: Date.now(),
@@ -371,7 +397,7 @@ export const completeZimaOnboarding = mutation({
     zimaIntent: v.string(),
     zimaHelpWith: v.optional(v.string()),
     links: v.array(v.string()),
-    recentProject: v.string(),
+    recentProject: v.optional(v.string()),
     skills: v.array(v.string()),
     interests: v.optional(v.array(v.string())),
     contactEmail: v.string(),
@@ -421,10 +447,7 @@ export const completeZimaOnboarding = mutation({
     if (zimaIntent === ZIMA_CONTRIBUTE_INTENT && !zimaHelpWith) {
       throw new Error("Tell us what kind of work you'd like to help with");
     }
-    const recentProject = trimText(args.recentProject);
-    if (!recentProject) {
-      throw new Error("Tell us about a project you've worked on recently");
-    }
+    const recentProject = trimText(args.recentProject) || undefined;
 
     const now = Date.now();
     const patch: Record<string, unknown> = {

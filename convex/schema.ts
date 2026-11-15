@@ -30,6 +30,30 @@ export default defineSchema({
     vision: v.optional(v.string()),
     why: v.optional(v.string()),
     learning: v.optional(v.string()),
+    favoriteMovies: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          title: v.string(),
+          year: v.optional(v.string()),
+          posterUrl: v.optional(v.string()),
+          tmdbUrl: v.string(),
+        }),
+      ),
+    ),
+    favoriteMusic: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          title: v.string(),
+          artist: v.string(),
+          album: v.optional(v.string()),
+          artworkUrl: v.optional(v.string()),
+          previewUrl: v.optional(v.string()),
+          geniusUrl: v.optional(v.string()),
+        }),
+      ),
+    ),
     availability: v.optional(v.array(availabilitySlot)),
     nowPlaying: v.optional(v.string()),
     /** Why they joined, from the Zima onboarding choices. */
@@ -68,6 +92,8 @@ export default defineSchema({
     field: projectFieldValidator,
     title: v.string(),
     blurb: v.string(),
+    /** City / place the project is based in. Set and changed by project owners. */
+    location: v.optional(v.string()),
     liveUrl: v.optional(v.string()),
     demoUrl: v.optional(v.string()),
     repoUrl: v.optional(v.string()),

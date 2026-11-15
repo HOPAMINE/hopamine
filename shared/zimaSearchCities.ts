@@ -9,7 +9,7 @@ export const ZIMA_SEARCH_CITIES = [
     label: "New York City",
     lng: -73.9712,
     lat: 40.7831,
-    matchers: ["new york", "nyc"],
+    matchers: ["new york city", "new york", "nyc"],
   },
   {
     id: "paris",
@@ -44,7 +44,8 @@ export const ZIMA_SEARCH_CITIES = [
     label: "Montreal",
     lng: -73.5673,
     lat: 45.5017,
-    matchers: ["montreal"],
+    /** Accents fold away ("Montréal" → montreal). */
+    matchers: ["montreal", "mtl"],
   },
 ] as const;
 
@@ -67,11 +68,15 @@ function foldLocation(value: string): string {
     .toLowerCase();
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** Last whole-word match, so "Chelsea, London" resolves to London. */
 function lastMatcherIndex(folded: string, matchers: readonly string[]): number {
   let last = -1;
   for (const matcher of matchers) {
-    const pattern = new RegExp(`\\b${matcher}\\b`, "g");
+    const pattern = new RegExp(`\\b${escapeRegExp(matcher)}\\b`, "g");
     let match = pattern.exec(folded);
     while (match) {
       if (match.index > last) last = match.index;
@@ -79,6 +84,50 @@ function lastMatcherIndex(folded: string, matchers: readonly string[]): number {
     }
   }
   return last;
+}
+
+/**
+ * Detect a known search city named in free-text (search bar).
+ * Prefers the longest matcher, then the latest mention — so
+ * "Paris builders in Montreal" → Montreal, and "New York" beats "York".
+ */
+export function detectSearchCityInText(
+  text: string | undefined,
+): ZimaSearchCityId | null {
+  const trimmed = text?.trim();
+  if (!trimmed) return null;
+
+  const folded = foldLocation(trimmed);
+  let best: {
+    id: ZimaSearchCityId;
+    index: number;
+    length: number;
+  } | null = null;
+
+  for (const city of ZIMA_SEARCH_CITIES) {
+    const matchers = [
+      ...city.matchers,
+      foldLocation(city.label),
+    ];
+    for (const matcher of matchers) {
+      const pattern = new RegExp(`\\b${escapeRegExp(matcher)}\\b`, "g");
+      let match = pattern.exec(folded);
+      while (match) {
+        const index = match.index;
+        const length = matcher.length;
+        if (
+          !best ||
+          length > best.length ||
+          (length === best.length && index > best.index)
+        ) {
+          best = { id: city.id, index, length };
+        }
+        match = pattern.exec(folded);
+      }
+    }
+  }
+
+  return best?.id ?? null;
 }
 
 /**

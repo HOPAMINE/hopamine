@@ -31,6 +31,11 @@ type Props = {
   profiles: ZimaSearchResult[];
   selectedResultId?: string | null;
   onSelectResult?: (id: string) => void;
+  /**
+   * After a search (half-map results): keep avatar cards visible when zoomed
+   * out, instead of collapsing to dots below NYC_MIN_ZOOM.
+   */
+  alwaysShowCards?: boolean;
 };
 
 /** Screen-space ring so cards that share a point stay readable. */
@@ -61,8 +66,8 @@ function placeKey(profile: ZimaSearchResult, cityScale: boolean): string {
 }
 
 /**
- * One avatar card per person. On the spinning globe a city shows a handful of
- * faces; zoomed into streets, everyone there gets a card. People on the same
+ * One avatar card per person once zoomed in. Far out, a city shows a handful
+ * of faces; at street scale, everyone there gets a card. People on the same
  * point fan into a ring.
  */
 function fanProfiles(
@@ -109,19 +114,22 @@ function useCityScale(): boolean {
 }
 
 /**
- * Every placed Hopamine user. Far away they cluster, with a ring of profile
- * cards on each city. Zoomed in, each person is the avatar card from the demo.
+ * Every placed Hopamine user. Far away they cluster as dots. Zoomed into a
+ * city (or after search, which opens at street scale), each person is an
+ * avatar card.
  */
 export function GlobePeople({
   profiles,
   selectedResultId = null,
   onSelectResult,
+  alwaysShowCards = false,
 }: Props) {
   const map = useMap();
   const cityScale = useCityScale();
+  const showCardsAtCityScale = alwaysShowCards || cityScale;
   const markers = useMemo(
-    () => fanProfiles(profiles, cityScale),
-    [cityScale, profiles],
+    () => fanProfiles(profiles, showCardsAtCityScale),
+    [showCardsAtCityScale, profiles],
   );
   const data = useMemo<PointCollection>(
     () => ({
@@ -140,6 +148,8 @@ export function GlobePeople({
 
   useEffect(() => {
     if (!map) return;
+    // Cards already cover people after search — skip cluster dots.
+    if (alwaysShowCards) return;
 
     const sync = () => {
       if (!map.isStyleLoaded()) return;
@@ -229,12 +239,12 @@ export function GlobePeople({
       if (map.getLayer(POINT_LAYER_ID)) map.removeLayer(POINT_LAYER_ID);
       if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
     };
-  }, [map, data]);
+  }, [map, data, alwaysShowCards]);
 
   return (
     <ResultMarkers
       results={markers}
-      minZoom={0}
+      minZoom={alwaysShowCards ? 0 : NYC_MIN_ZOOM}
       selectedResultId={selectedResultId}
       onSelectResult={onSelectResult}
     />

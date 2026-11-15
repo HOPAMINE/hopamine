@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -38,38 +37,13 @@ function FieldLabel({
 
 const fieldOptions = Object.keys(HACKATHON_FIELDS) as HackathonField[];
 
-function HackathonClaimPrompt({ variant }: { variant: "dark" | "light" }) {
-  const boxClass =
-    variant === "light"
-      ? "rounded-2xl border border-dashed border-accent-events/35 bg-accent-events/[0.06] p-4"
-      : "rounded-2xl border border-dashed border-white/30 bg-white/5 p-4";
-
-  const textClass =
-    variant === "light" ? "text-neutral-700" : "text-white/85";
-
-  const buttonClass =
-    variant === "light"
-      ? `${robotoMono.className} mt-3 inline-flex items-center rounded-full border border-accent-events/30 bg-accent-events px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-white hover:text-accent-events`
-      : `${robotoMono.className} mt-3 inline-flex items-center rounded-full border border-white/35 bg-white px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-accent-events transition-colors hover:bg-accent-events hover:text-white`;
-
-  return (
-    <div className={boxClass}>
-      <p className={`${robotoMono.className} text-sm leading-relaxed ${textClass}`}>
-        Participated at the Hackathon? Claim your project & badge.
-      </p>
-      <Link href="/claim" className={buttonClass}>
-        Claim
-      </Link>
-    </div>
-  );
-}
-
 export function AddProjectForm({ onCancel, onCreated, variant = "dark" }: AddProjectFormProps) {
   const createProject = useMutation(api.projects.create);
 
   const [field, setField] = useState<HackathonField>("Civic");
   const [title, setTitle] = useState("");
   const [blurb, setBlurb] = useState("");
+  const [location, setLocation] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
   const [inviteUserIds, setInviteUserIds] = useState<Id<"users">[]>([]);
   const [saving, setSaving] = useState(false);
@@ -117,6 +91,7 @@ export function AddProjectForm({ onCancel, onCreated, variant = "dark" }: AddPro
         field,
         title: trimmedTitle,
         blurb: trimmedBlurb,
+        location: location.trim() || undefined,
         liveUrl: liveUrl.trim() || undefined,
         inviteUserIds,
       });
@@ -130,8 +105,6 @@ export function AddProjectForm({ onCancel, onCreated, variant = "dark" }: AddPro
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
-      <HackathonClaimPrompt variant={variant} />
-
       <div>
         <FieldLabel htmlFor="project-title" variant={variant}>
           Title
@@ -182,6 +155,21 @@ export function AddProjectForm({ onCancel, onCreated, variant = "dark" }: AddPro
           placeholder="What are you building?"
           maxLength={500}
           required
+        />
+      </div>
+
+      <div>
+        <FieldLabel htmlFor="project-location" variant={variant}>
+          Based in
+        </FieldLabel>
+        <input
+          id="project-location"
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          className={inputClassName}
+          placeholder="City"
+          maxLength={80}
         />
       </div>
 

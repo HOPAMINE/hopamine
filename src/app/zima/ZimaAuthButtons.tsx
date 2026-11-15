@@ -4,9 +4,10 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, type MouseEvent } from "react";
 import { api } from "../../../convex/_generated/api";
+import { getProjectOnboardingHref } from "@/lib/projectOnboarding";
 import {
   getZimaAuthHref,
   getZimaPath,
@@ -28,15 +29,18 @@ const linkBase = `${jetbrainsMono.className} inline-flex items-center justify-ce
 
 const menuItemClass = `${jetbrainsMono.className} block w-full px-3 py-2 text-left text-[13px] font-semibold uppercase tracking-wide text-neutral-800 transition-colors hover:bg-neutral-50`;
 
+const navIconButtonClass =
+  "relative hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-neutral-100 transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a6f3] md:inline-flex";
+
 function displayCityName(location: string | undefined): string {
   const trimmed = location?.trim();
   if (!trimmed) return "NYC";
   if (/new york city/i.test(trimmed) || /\bnyc\b/i.test(trimmed)) {
     return "New York City";
   }
-  const comma = trimmed.lastIndexOf(",");
+  const comma = trimmed.indexOf(",");
   if (comma >= 0) {
-    return trimmed.slice(comma + 1).trim() || trimmed;
+    return trimmed.slice(0, comma).trim() || trimmed;
   }
   return trimmed;
 }
@@ -50,12 +54,23 @@ function ChatNavIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      strokeLinecap="square"
-      strokeLinejoin="miter"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <path d="M4 5h16v11H7l-3 3V5z" />
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
     </svg>
   );
+}
+
+function openMessagesDock(
+  event: MouseEvent<HTMLAnchorElement>,
+  chatAvailable: boolean,
+  openDock: () => void,
+) {
+  if (!chatAvailable) return;
+  if (!window.matchMedia("(min-width: 768px)").matches) return;
+  event.preventDefault();
+  openDock();
 }
 
 function ZimaChatNavLink() {
@@ -67,14 +82,9 @@ function ZimaChatNavLink() {
   return (
     <Link
       href={href}
-      onClick={(event) => {
-        if (!chatAvailable) return;
-        if (!window.matchMedia("(min-width: 768px)").matches) return;
-        event.preventDefault();
-        openDock();
-      }}
+      onClick={(event) => openMessagesDock(event, chatAvailable, openDock)}
       aria-label="Messages"
-      className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-neutral-100 transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a6f3] md:inline-flex"
+      className={navIconButtonClass}
       style={{ color: HOPAMINE_BLUE }}
     >
       <ChatNavIcon />
@@ -85,6 +95,7 @@ function ZimaChatNavLink() {
 function ZimaSignedInUser() {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const router = useRouter();
   const convexUser = useQuery(api.users.getCurrentUser);
   const [editOpen, setEditOpen] = useState(false);
   const hostname =
@@ -105,6 +116,7 @@ function ZimaSignedInUser() {
           username: user.username ?? undefined,
           avatarUrl: user.imageUrl ?? "",
           archetypes: [],
+          skills: [],
         }
       : null;
 
@@ -174,6 +186,16 @@ function ZimaSignedInUser() {
               className={menuItemClass}
             >
               View profile
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() =>
+                router.push(getProjectOnboardingHref(hostname, { from: "zima" }))
+              }
+              className={menuItemClass}
+            >
+              Add project
             </button>
             <button
               type="button"

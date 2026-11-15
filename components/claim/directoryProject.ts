@@ -24,8 +24,3 @@ export function toHackathonProject(project: DirectoryProject): HackathonProject 
     repoUrl: project.repoUrl,
   };
 }
-
-export function projectMatchesQuery(project: DirectoryProject, query: string): boolean {
-  const haystack = `${project.title} ${project.builder} ${project.blurb}`.toLowerCase();
-  return haystack.includes(query);
-}

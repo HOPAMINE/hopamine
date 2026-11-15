@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GlobePeople } from "@/components/zima/GlobePeople";
+import { GlobeProjects } from "@/components/zima/GlobeProjects";
 import { ZimaGlobeBackdrop } from "@/components/zima/ZimaGlobeBackdrop";
 import { ZimaLogo } from "./ZimaLogo";
 import { ZIMA_FIXED_LOGO_TOP_LEFT } from "./zimaLogoPlacement";
@@ -12,7 +13,7 @@ import { ZimaShell } from "./ZimaShell";
 export function ZimaPageClient() {
   const [isChatMode, setIsChatMode] = useState(false);
   const profiles = useZimaGlobeProfiles();
-  const { setHideMobileTopProfile } = useZimaSearchChrome();
+  const { mapLayers, setHideMobileTopProfile } = useZimaSearchChrome();
 
   useEffect(() => {
     setHideMobileTopProfile(isChatMode);
@@ -26,7 +27,8 @@ export function ZimaPageClient() {
           extendUnderTopChrome
           className="pointer-events-none z-0 bg-white"
         >
-          <GlobePeople profiles={profiles} />
+          {mapLayers.people ? <GlobePeople profiles={profiles} /> : null}
+          {mapLayers.projects ? <GlobeProjects /> : null}
         </ZimaGlobeBackdrop>
       ) : null}
       {!isChatMode ? (

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
   action,
@@ -10,6 +10,8 @@ import {
 } from "./_generated/server";
 import { jitterCoordinates, type LngLat } from "../shared/nycLocationCoordinates";
 import { coordinatesForSearchLocation } from "../shared/zimaSearchCities";
+import { isHackathonDirectoryProject } from "./lib/seedHackathonDirectory";
+import { projectFieldValidator } from "./lib/projectFields";
 import {
   zimaSearchResultValidator,
   type ZimaSearchResult,
@@ -17,7 +19,34 @@ import {
 
 /** Safety stop so a huge table cannot blow one query. The directory is every onboarded user up to this. */
 const MAX_USERS = 2000;
+const MAX_GLOBE_PROJECTS = 2000;
 const GEOCODE_BATCH = 20;
+
+/**
+ * Globe pins only include projects created after Nov 14, 2026 (keeps
+ * hackathon-era / older directory rows off the map).
+ */
+const GLOBE_PROJECTS_CREATED_AFTER_MS = Date.UTC(2026, 10, 15);
+
+export const zimaGlobeProjectValidator = v.object({
+  _id: v.id("projects"),
+  title: v.string(),
+  blurb: v.string(),
+  field: projectFieldValidator,
+  location: v.string(),
+  lng: v.number(),
+  lat: v.number(),
+});
+
+export type ZimaGlobeProject = {
+  _id: Id<"projects">;
+  title: string;
+  blurb: string;
+  field: Doc<"projects">["field"];
+  location: string;
+  lng: number;
+  lat: number;
+};
 
 function locationPointKey(location: string): string {
   return location
@@ -83,7 +112,7 @@ async function cachedPointsForLocations(
   return byKey;
 }
 
-function coordinatesForUser(
+function coordinatesForLocation(
   location: string,
   cached: { lng?: number; lat?: number } | undefined,
 ): LngLat | "pending" | null {
@@ -108,6 +137,37 @@ function toGlobeProfile(user: Doc<"users">, coordinates: LngLat): ZimaSearchResu
     skills: uniqueLabels([...(user.archetypes ?? []), ...(user.skills ?? [])]),
     interests: user.interests ?? [],
   };
+}
+
+function toGlobeProject(
+  project: Doc<"projects">,
+  location: string,
+  coordinates: LngLat,
+): ZimaGlobeProject {
+  const { lng, lat } = jitterCoordinates(coordinates, project._id);
+  return {
+    _id: project._id,
+    title: project.title,
+    blurb: project.blurb,
+    field: project.field,
+    location,
+    lng,
+    lat,
+  };
+}
+
+async function listGlobeEligibleProjects(
+  ctx: QueryCtx,
+): Promise<Doc<"projects">[]> {
+  const projects = await ctx.db.query("projects").collect();
+  return projects
+    .filter(
+      (project) =>
+        project.createdAt >= GLOBE_PROJECTS_CREATED_AFTER_MS &&
+        !isHackathonDirectoryProject(project) &&
+        Boolean(project.location?.trim()),
+    )
+    .slice(0, MAX_GLOBE_PROJECTS);
 }
 
 /**
@@ -138,7 +198,7 @@ export const profiles = query({
     for (const user of users) {
       const location = user.location?.trim();
       if (!location) continue;
-      const coordinates = coordinatesForUser(
+      const coordinates = coordinatesForLocation(
         location,
         points.get(locationPointKey(location)),
       );
@@ -152,6 +212,47 @@ export const profiles = query({
 
     return {
       profiles,
+      pendingLocations: [...pending].slice(0, GEOCODE_BATCH),
+    };
+  },
+});
+
+/**
+ * Projects with a location, created after Nov 14 2026. Same geocode path as
+ * people (built-in cities + locationPoints cache). Public for the landing globe.
+ */
+export const projects = query({
+  args: {},
+  returns: v.object({
+    projects: v.array(zimaGlobeProjectValidator),
+    pendingLocations: v.array(v.string()),
+  }),
+  handler: async (ctx) => {
+    const eligible = await listGlobeEligibleProjects(ctx);
+    const points = await cachedPointsForLocations(
+      ctx,
+      eligible.map((project) => project.location!.trim()),
+    );
+
+    const projects: ZimaGlobeProject[] = [];
+    const pending = new Set<string>();
+
+    for (const project of eligible) {
+      const location = project.location!.trim();
+      const coordinates = coordinatesForLocation(
+        location,
+        points.get(locationPointKey(location)),
+      );
+      if (coordinates === "pending") {
+        pending.add(location);
+        continue;
+      }
+      if (!coordinates) continue;
+      projects.push(toGlobeProject(project, location, coordinates));
+    }
+
+    return {
+      projects,
       pendingLocations: [...pending].slice(0, GEOCODE_BATCH),
     };
   },

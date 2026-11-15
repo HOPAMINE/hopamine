@@ -9,7 +9,7 @@ import type { HackathonProject } from "@/lib/hackathonDirectory";
 import { roboto, robotoMono } from "../../fonts";
 import { ClaimNavbar } from "./ClaimNavbar";
 import { ClaimProjectCard } from "./ClaimProjectCard";
-import { projectMatchesQuery, toHackathonProject } from "./directoryProject";
+import { toHackathonProject } from "./directoryProject";
 
 const inputClassName = `${robotoMono.className} w-full rounded-lg border border-white/25 bg-[#13450E] px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/50`;
 
@@ -21,7 +21,6 @@ export function ClaimProjectContent() {
   const { user, isLoaded: clerkLoaded } = useUser();
   const convexUser = useQuery(api.users.getCurrentUser, clerkLoaded && user ? {} : "skip");
   const myClaim = useQuery(api.hackathonClaims.getMyProject);
-  const directoryProjects = useQuery(api.projects.listHackathonDirectory);
   const claimProject = useMutation(api.hackathonClaims.claimProject);
   const showClaimedProjectOnDashboard = useMutation(
     api.users.showClaimedHackathonProjectOnDashboard,
@@ -34,18 +33,20 @@ export function ClaimProjectContent() {
   }, [myClaim, showClaimedProjectOnDashboard]);
 
   const [search, setSearch] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const filteredProjects = useMemo(() => {
-    if (!directoryProjects) return [];
-    const query = search.trim().toLowerCase();
-    return directoryProjects.filter((project) => {
-      if (!query) return true;
-      return projectMatchesQuery(project, query);
-    });
-  }, [directoryProjects, search]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(search), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const directoryProjects = useQuery(api.projects.searchHackathonDirectory, {
+    query: debouncedQuery,
+  });
+  const filteredProjects = directoryProjects ?? [];
 
   const selectedDirectoryProject =
     selectedIndex === null

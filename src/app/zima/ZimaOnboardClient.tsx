@@ -15,6 +15,7 @@ import {
   allowZimaOnboardPreviewInDev,
   hasCompletedZimaOnboarding,
 } from "@/lib/zima/onboarding";
+import { getProjectOnboardingHref } from "@/lib/projectOnboarding";
 import { getZimaAuthHref, getZimaPath } from "@/lib/zima/routes";
 import { jetbrainsMono, newsreader } from "../../../fonts";
 import {
@@ -26,9 +27,9 @@ import { normalizeOptionalProjectUrl } from "../../../convex/lib/projectUrls";
 import {
   ZIMA_CONTRIBUTE_INTENT,
   ZIMA_INTENTS,
-  ZIMA_STORY_ARCHETYPES,
   canonicalZimaIntent,
 } from "../../../shared/zimaVocabulary";
+import { ZimaArchetypePicker } from "./ZimaArchetypePicker";
 
 const HOPAMINE_BLUE = "#00a6f3";
 const STEP_NAME = 0;
@@ -67,6 +68,37 @@ function ContinueButton({
     >
       {label}
     </button>
+  );
+}
+
+function OptionalStepHint() {
+  return (
+    <p
+      className={`${jetbrainsMono.className} text-[13px] text-neutral-500`}
+    >
+      Optional — you can skip and add this later.
+    </p>
+  );
+}
+
+function OptionalStepFooter({
+  canContinue,
+  onSkip,
+}: {
+  canContinue: boolean;
+  onSkip: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <ContinueButton disabled={!canContinue} label="Continue" />
+      <button
+        type="button"
+        onClick={onSkip}
+        className={`${onboardButtonClass} flex h-12 w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-6 text-neutral-900 transition-colors hover:bg-neutral-50`}
+      >
+        Skip for now
+      </button>
+    </div>
   );
 }
 
@@ -194,6 +226,9 @@ export function ZimaOnboardClient() {
   const { coverAndNavigate } = useHexLoadTransition();
 
   const [searchHref, setSearchHref] = useState("/zima/search");
+  const [projectOnboardHref, setProjectOnboardHref] = useState(
+    "/zima/onboard/project?from=zima",
+  );
   const [signInHref, setSignInHref] = useState(
     "/zima/sign-in?redirect_url=%2Fzima%2Fonboard",
   );
@@ -219,6 +254,7 @@ export function ZimaOnboardClient() {
   useEffect(() => {
     const hostname = window.location.hostname;
     setSearchHref(getZimaPath("search", hostname));
+    setProjectOnboardHref(getProjectOnboardingHref(hostname, { from: "zima" }));
     setSignInHref(
       getZimaAuthHref("sign-in", getZimaPath("onboard", hostname), hostname),
     );
@@ -317,13 +353,11 @@ export function ZimaOnboardClient() {
 
   function submitBio(event: FormEvent) {
     event.preventDefault();
-    if (!bio.trim()) return;
     goNext();
   }
 
   function submitWorkingOn(event: FormEvent) {
     event.preventDefault();
-    if (!workingOn.trim()) return;
     goNext();
   }
 
@@ -367,7 +401,6 @@ export function ZimaOnboardClient() {
 
   function submitRecentProject(event: FormEvent) {
     event.preventDefault();
-    if (!recentProject.trim()) return;
     goNext();
   }
 
@@ -388,7 +421,7 @@ export function ZimaOnboardClient() {
       !location.trim() ||
       (ASK_POSTAL_CODE && !isPostalCode(postalCode)) ||
       !canonicalZimaIntent(zimaIntent) ||
-      !recentProject.trim() ||
+      selectedArchetypesForSave().length === 0 ||
       (zimaIntent === ZIMA_CONTRIBUTE_INTENT && !zimaHelpWith.trim())
     ) {
       setSubmitError("Finish the earlier questions before entering Zima.");
@@ -409,7 +442,7 @@ export function ZimaOnboardClient() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      await coverAndNavigate(searchHref, {
+      await coverAndNavigate(projectOnboardHref, {
         replace: true,
         beforeNavigate: () =>
           completeZimaOnboarding({
@@ -426,7 +459,7 @@ export function ZimaOnboardClient() {
                 ? zimaHelpWith.trim()
                 : undefined,
             links: profileLinks,
-            recentProject: recentProject.trim(),
+            recentProject: recentProject.trim() || undefined,
             skills: selectedArchetypesForSave(),
             contactEmail: trimmedEmail,
           }),
@@ -559,42 +592,11 @@ export function ZimaOnboardClient() {
               />
             }
           >
-            <div className="flex flex-col gap-3">
-              {ZIMA_STORY_ARCHETYPES.map((option) => {
-                const selected = archetypes.includes(option.label);
-                return (
-                  <button
-                    key={option.label}
-                    type="button"
-                    onClick={() =>
-                      setArchetypes((current) =>
-                        current.includes(option.label)
-                          ? current.filter((item) => item !== option.label)
-                          : [...current, option.label],
-                      )
-                    }
-                    className={`flex w-full flex-col items-start gap-1 rounded-xl border px-4 py-3 text-left transition-colors ${
-                      selected
-                        ? "border-transparent bg-[#00a6f3] text-white"
-                        : "border-neutral-200 bg-white text-neutral-900"
-                    }`}
-                  >
-                    <span
-                      className={`${jetbrainsMono.className} text-[14px] font-semibold uppercase tracking-wide`}
-                    >
-                      {option.emoji} {option.label}
-                    </span>
-                    <span
-                      className={`${jetbrainsMono.className} text-[13px] leading-snug ${
-                        selected ? "text-white/90" : "text-neutral-600"
-                      }`}
-                    >
-                      {option.description}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <ZimaArchetypePicker
+              label=""
+              value={archetypes}
+              onChange={setArchetypes}
+            />
           </OnboardStepForm>
         ) : null}
 
@@ -603,16 +605,19 @@ export function ZimaOnboardClient() {
             title="What are you working on?"
             onSubmit={submitWorkingOn}
             footer={
-              <ContinueButton disabled={!workingOn.trim()} label="Continue" />
+              <OptionalStepFooter
+                canContinue={!!workingOn.trim()}
+                onSkip={goNext}
+              />
             }
           >
+            <OptionalStepHint />
             <textarea
               id="zima-onboard-working-on"
               value={workingOn}
               onChange={(event) => setWorkingOn(event.target.value)}
               placeholder="Your current project, startup, or initiative."
               rows={6}
-              required
               aria-label="What you are working on"
               className={`${textareaClass} min-h-[160px]`}
             />
@@ -738,19 +743,19 @@ export function ZimaOnboardClient() {
             title="What's a project you've worked on recently?"
             onSubmit={submitRecentProject}
             footer={
-              <ContinueButton
-                disabled={!recentProject.trim()}
-                label="Continue"
+              <OptionalStepFooter
+                canContinue={!!recentProject.trim()}
+                onSkip={goNext}
               />
             }
           >
+            <OptionalStepHint />
             <textarea
               id="zima-onboard-recent-project"
               value={recentProject}
               onChange={(event) => setRecentProject(event.target.value)}
               placeholder="Something you shipped, built, or helped with."
               rows={6}
-              required
               aria-label="A project you've worked on recently"
               className={`${textareaClass} min-h-[160px]`}
             />
@@ -780,16 +785,16 @@ export function ZimaOnboardClient() {
             title="Tell me about yourself?"
             onSubmit={submitBio}
             footer={
-              <ContinueButton disabled={!bio.trim()} label="Continue" />
+              <OptionalStepFooter canContinue={!!bio.trim()} onSkip={goNext} />
             }
           >
+            <OptionalStepHint />
             <textarea
               id="zima-onboard-bio"
               value={bio}
               onChange={(event) => setBio(event.target.value)}
               placeholder="A short intro about you, what you're making, and who you want to meet."
               rows={10}
-              required
               aria-label="Bio"
               className={`${textareaClass} min-h-[220px]`}
             />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { useZimaSearchChrome } from "@/app/zima/ZimaSearchChromeContext";
 import type { ZimaSearchResult } from "@/lib/zima/searchResults";
 import {
   zimaSearchCityById,
@@ -8,6 +9,7 @@ import {
 } from "../../../shared/zimaSearchCities";
 import Globe, { useMap } from "./Globe";
 import { GlobePeople } from "./GlobePeople";
+import { GlobeProjects } from "./GlobeProjects";
 import type { GlobeView } from "./camera";
 import { NATURAL_MAP_PALETTE } from "./globePalettes";
 import { NYC_REGION_VIEW } from "./nycRegion";
@@ -70,6 +72,7 @@ export default function ZimaSearchMap({
   onSelectResult,
 }: Props) {
   const view = useMemo(() => cityView(cityId), [cityId]);
+  const { mapLayers } = useZimaSearchChrome();
 
   return (
     <Globe
@@ -82,11 +85,17 @@ export default function ZimaSearchMap({
       styleOptions={{ projection: "mercator", natural: true }}
     >
       <SyncMapView view={view} />
-      <GlobePeople
-        profiles={directory}
-        selectedResultId={showPins ? selectedResultId : null}
-        onSelectResult={showPins ? onSelectResult : undefined}
-      />
+      {mapLayers.people ? (
+        <GlobePeople
+          profiles={directory}
+          alwaysShowCards={showPins}
+          selectedResultId={showPins ? selectedResultId : null}
+          onSelectResult={showPins ? onSelectResult : undefined}
+        />
+      ) : null}
+      {mapLayers.projects ? (
+        <GlobeProjects alwaysShowCards={showPins} />
+      ) : null}
     </Globe>
   );
 }

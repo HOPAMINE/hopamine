@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import type { ZimaSearchResult } from "@/lib/zima/searchResults";
 import {
   DEFAULT_ZIMA_SEARCH_CITY_ID,
+  detectSearchCityInText,
   type ZimaSearchCityId,
 } from "../../../shared/zimaSearchCities";
 import type { useZimaChat } from "./useZimaChat";
@@ -50,15 +51,30 @@ export function useZimaSearch(chat: Chat) {
     return "";
   }, [chat.messages]);
 
+  // Search bar city names (e.g. "Montreal") switch the city filter before the query runs.
+  const cityFromQuery = useMemo(
+    () => detectSearchCityInText(submittedText),
+    [submittedText],
+  );
+
+  useEffect(() => {
+    if (!cityFromQuery) return;
+    setFilters((prev) =>
+      prev.city === cityFromQuery ? prev : { ...prev, city: cityFromQuery },
+    );
+  }, [cityFromQuery]);
+
+  const searchCity = cityFromQuery ?? filters.city;
+
   const searchArgs = useMemo(
     () => ({
       text: submittedText,
       archetypes: filters.archetypes,
       interests: filters.interests,
       activeOnly: filters.activeOnly,
-      city: filters.city,
+      city: searchCity,
     }),
-    [submittedText, filters],
+    [submittedText, filters.archetypes, filters.interests, filters.activeOnly, searchCity],
   );
   const searchKey = JSON.stringify(searchArgs);
   const shouldSearch = chat.hasSearchResults;

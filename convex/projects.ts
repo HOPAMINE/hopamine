@@ -10,6 +10,7 @@ import { normalizeOptionalProjectUrl } from "./lib/projectUrls";
 import { generateUniqueJoinCode, normalizeJoinCode } from "./lib/projectJoinCode";
 import { isHackathonDirectoryProject } from "./lib/seedHackathonDirectory";
 import { HACKATHON_PROJECT_COUNT } from "./lib/hackathonProjectCount";
+import { hackathonIndicesMatchingPrefix } from "../shared/projectPrefixSearch";
 import { Doc, Id } from "./_generated/dataModel";
 
 const projectMemberSummaryValidator = v.object({
@@ -40,6 +41,7 @@ const projectWithMembersValidator = v.object({
   field: projectFieldValidator,
   title: v.string(),
   blurb: v.string(),
+  location: v.optional(v.string()),
   liveUrl: v.optional(v.string()),
   demoUrl: v.optional(v.string()),
   repoUrl: v.optional(v.string()),
@@ -81,6 +83,16 @@ const pendingJoinRequestValidator = v.object({
 
 function trimText(value: string): string {
   return value.trim();
+}
+
+/** Optional city/place; empty clears. Owners set this on create/update. */
+function normalizeOptionalProjectLocation(value: string | undefined): string | undefined {
+  const trimmed = value?.trim().replace(/\s+/g, " ");
+  if (!trimmed) return undefined;
+  if (trimmed.length > 80) {
+    throw new Error("Project location must be 80 characters or fewer");
+  }
+  return trimmed;
 }
 
 async function getAuthenticatedUser(ctx: MutationCtx | QueryCtx) {
@@ -456,6 +468,7 @@ export const create = mutation({
     field: projectFieldValidator,
     title: v.string(),
     blurb: v.string(),
+    location: v.optional(v.string()),
     liveUrl: v.optional(v.string()),
     inviteUserIds: v.array(v.id("users")),
   },
@@ -498,6 +511,7 @@ export const create = mutation({
     }
 
     const now = Date.now();
+    const normalizedLocation = normalizeOptionalProjectLocation(args.location);
     const normalizedLiveUrl = args.liveUrl
       ? normalizeOptionalProjectUrl(args.liveUrl)
       : undefined;
@@ -509,6 +523,7 @@ export const create = mutation({
       title,
       blurb,
       joinCode,
+      ...(normalizedLocation ? { location: normalizedLocation } : {}),
       ...(normalizedLiveUrl ? { liveUrl: normalizedLiveUrl } : {}),
       createdAt: now,
       updatedAt: now,
@@ -637,34 +652,68 @@ export const declineInvite = mutation({
   },
 });
 
+function toHackathonDirectoryProject(project: Doc<"projects">) {
+  return {
+    _id: project._id,
+    hackathonIndex: project.hackathonIndex!,
+    field: project.field,
+    title: project.title,
+    builder: project.builderName ?? "Green Hackathon",
+    discord: project.builderDiscord,
+    blurb: project.blurb,
+    liveUrl: project.liveUrl,
+    demoUrl: project.demoUrl,
+    repoUrl: project.repoUrl,
+  };
+}
+
+async function loadHackathonDirectoryByIndices(
+  ctx: QueryCtx,
+  indices: readonly number[],
+) {
+  const projects = await Promise.all(
+    indices.map((index) =>
+      ctx.db
+        .query("projects")
+        .withIndex("by_hackathon_index", (q) => q.eq("hackathonIndex", index))
+        .unique(),
+    ),
+  );
+
+  return projects
+    .filter((project): project is NonNullable<typeof project> => project !== null)
+    .map(toHackathonDirectoryProject);
+}
+
 export const listHackathonDirectory = query({
   args: {},
   returns: v.array(hackathonDirectoryProjectValidator),
   handler: async (ctx) => {
-    const projects = await Promise.all(
-      Array.from({ length: HACKATHON_PROJECT_COUNT }, (_, index) =>
-        ctx.db
-          .query("projects")
-          .withIndex("by_hackathon_index", (q) => q.eq("hackathonIndex", index))
-          .unique(),
-      ),
-    );
+    const indices = Array.from({ length: HACKATHON_PROJECT_COUNT }, (_, index) => index);
+    const projects = await loadHackathonDirectoryByIndices(ctx, indices);
+    return projects.sort((a, b) => a.hackathonIndex - b.hackathonIndex);
+  },
+});
 
-    return projects
-      .filter((project): project is NonNullable<typeof project> => project !== null)
-      .sort((a, b) => a.hackathonIndex! - b.hackathonIndex!)
-      .map((project) => ({
-        _id: project._id,
-        hackathonIndex: project.hackathonIndex!,
-        field: project.field,
-        title: project.title,
-        builder: project.builderName ?? "Green Hackathon",
-        discord: project.builderDiscord,
-        blurb: project.blurb,
-        liveUrl: project.liveUrl,
-        demoUrl: project.demoUrl,
-        repoUrl: project.repoUrl,
-      }));
+/**
+ * Binary-search prefix match on folded project title / builder, then load
+ * matching directory rows from Convex by hackathonIndex.
+ */
+export const searchHackathonDirectory = query({
+  args: {
+    query: v.string(),
+  },
+  returns: v.array(hackathonDirectoryProjectValidator),
+  handler: async (ctx, args) => {
+    const search = trimText(args.query);
+    if (!search) {
+      const indices = Array.from({ length: HACKATHON_PROJECT_COUNT }, (_, index) => index);
+      const projects = await loadHackathonDirectoryByIndices(ctx, indices);
+      return projects.sort((a, b) => a.hackathonIndex - b.hackathonIndex);
+    }
+
+    const indices = hackathonIndicesMatchingPrefix(search);
+    return await loadHackathonDirectoryByIndices(ctx, indices);
   },
 });
 
@@ -754,6 +803,7 @@ export const update = mutation({
     field: v.optional(projectFieldValidator),
     title: v.optional(v.string()),
     blurb: v.optional(v.string()),
+    location: v.optional(v.string()),
     liveUrl: v.optional(v.string()),
     inviteUserIds: v.optional(v.array(v.id("users"))),
   },
@@ -777,6 +827,7 @@ export const update = mutation({
       title: string;
       blurb: string;
       updatedAt: number;
+      location?: string;
       liveUrl?: string;
       joinCode?: string;
     } = {
@@ -785,6 +836,10 @@ export const update = mutation({
       blurb,
       updatedAt: now,
     };
+
+    if (args.location !== undefined) {
+      patch.location = normalizeOptionalProjectLocation(args.location);
+    }
 
     if (args.liveUrl !== undefined) {
       patch.liveUrl = normalizeOptionalProjectUrl(args.liveUrl);

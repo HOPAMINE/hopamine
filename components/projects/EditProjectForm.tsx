@@ -13,6 +13,7 @@ type EditProjectFormProps = {
   initialField: HackathonField;
   initialTitle: string;
   initialBlurb: string;
+  initialLocation?: string;
   initialLiveUrl?: string;
   initialJoinCode?: string;
   onCancel: () => void;
@@ -48,6 +49,7 @@ export function EditProjectForm({
   initialField,
   initialTitle,
   initialBlurb,
+  initialLocation = "",
   initialLiveUrl = "",
   initialJoinCode = "",
   onCancel,
@@ -59,6 +61,7 @@ export function EditProjectForm({
   const [field, setField] = useState<HackathonField>(initialField);
   const [title, setTitle] = useState(initialTitle);
   const [blurb, setBlurb] = useState(initialBlurb);
+  const [location, setLocation] = useState(initialLocation);
   const [liveUrl, setLiveUrl] = useState(initialLiveUrl);
   const [copiedJoinCode, setCopiedJoinCode] = useState(false);
   const [inviteUserIds, setInviteUserIds] = useState<Id<"users">[]>([]);
@@ -108,6 +111,7 @@ export function EditProjectForm({
         field,
         title: trimmedTitle,
         blurb: trimmedBlurb,
+        location: location.trim(),
         liveUrl: liveUrl.trim(),
         inviteUserIds: inviteUserIds.length > 0 ? inviteUserIds : undefined,
       });
@@ -171,6 +175,21 @@ export function EditProjectForm({
           placeholder="What are you building?"
           maxLength={500}
           required
+        />
+      </div>
+
+      <div>
+        <FieldLabel htmlFor="edit-project-location" variant={variant}>
+          Based in
+        </FieldLabel>
+        <input
+          id="edit-project-location"
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          className={inputClassName}
+          placeholder="City"
+          maxLength={80}
         />
       </div>
 

@@ -2,14 +2,81 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
-  ZIMA_SEARCH_CITIES,
-  zimaSearchCityById,
-} from "../../../shared/zimaSearchCities";
-import { ZIMA_ARCHETYPES, ZIMA_INTERESTS } from "../../../shared/zimaVocabulary";
+  ZIMA_INTERESTS,
+  ZIMA_STORY_ARCHETYPES,
+} from "../../../shared/zimaVocabulary";
 import { jetbrainsMono } from "../../../fonts";
+import {
+  useZimaSearchChrome,
+  type ZimaMapLayerId,
+} from "./ZimaSearchChromeContext";
 import type { ZimaSearchFilterState } from "./useZimaSearch";
 
 const HOPAMINE_BLUE = "#00a6f3";
+
+const MAP_LAYER_PILLS: readonly { id: ZimaMapLayerId; label: string }[] = [
+  { id: "people", label: "People" },
+  { id: "projects", label: "Projects" },
+  { id: "events", label: "Events" },
+];
+
+function MapLayerIcon({ layer }: { layer: ZimaMapLayerId }) {
+  if (layer === "people") {
+    return (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5.5 19.5c1.5-3.5 3.8-5 6.5-5s5 1.5 6.5 5" />
+      </svg>
+    );
+  }
+  if (layer === "projects") {
+    return (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M12 21v-9" />
+        <path d="M12 12c0-4 3-7 7-7 0 4-3 7-7 7z" />
+        <path d="M12 15c0-3-2.5-5-5.5-5 0 3 2.5 5 5.5 5z" />
+      </svg>
+    );
+  }
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M8 3v4" />
+      <path d="M16 3v4" />
+    </svg>
+  );
+}
 
 const FILTER_CHECKBOX_PX = 20;
 const FILTER_CHECKMARK_PX = 14;
@@ -56,6 +123,7 @@ function FilterCheckbox({
   ariaControls,
   opensPopover = false,
   className = "",
+  titleHint,
 }: {
   label: string;
   isOn: boolean;
@@ -65,7 +133,10 @@ function FilterCheckbox({
   ariaControls?: string;
   opensPopover?: boolean;
   className?: string;
+  /** Tooltip text; defaults to `label`. */
+  titleHint?: string;
 }) {
+  const tooltip = titleHint ?? label;
   const inputId = useId();
   const rowClass = `${jetbrainsMono.className} inline-flex h-8 shrink-0 cursor-pointer items-center gap-2.5 bg-transparent px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-800 sm:text-[12px] ${className}`;
   const labelClass = className.includes("w-full")
@@ -97,7 +168,7 @@ function FilterCheckbox({
         />
         <FilterCheckboxBox isOn={isOn} />
         {children}
-        <span className={labelClass} title={label}>
+        <span className={labelClass} title={tooltip}>
           {label}
         </span>
       </span>
@@ -115,7 +186,7 @@ function FilterCheckbox({
       />
       <FilterCheckboxBox isOn={isOn} />
       {children}
-      <span className={labelClass} title={label}>
+      <span className={labelClass} title={tooltip}>
         {label}
       </span>
     </label>
@@ -162,6 +233,36 @@ type Props = {
   onFiltersChange: (filters: ZimaSearchFilterState) => void;
 };
 
+function MapLayerPill({
+  label,
+  selected,
+  onClick,
+  children,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={selected}
+      title={label}
+      onClick={onClick}
+      className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors ${
+        selected
+          ? "border-transparent text-white"
+          : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-700"
+      }`}
+      style={selected ? { backgroundColor: HOPAMINE_BLUE } : undefined}
+    >
+      {children}
+    </button>
+  );
+}
+
 /** Chip filters narrow the candidate set in the database before the model sees it. */
 export function ZimaSearchFilters({
   className = "",
@@ -169,12 +270,13 @@ export function ZimaSearchFilters({
   filters,
   onFiltersChange,
 }: Props) {
+  const { mapLayers, toggleMapLayer } = useZimaSearchChrome();
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const [interestsOpen, setInterestsOpen] = useState(false);
   const [archetypesOpen, setArchetypesOpen] = useState(false);
-  const [locationOpen, setLocationOpen] = useState(false);
+  const filtersPanelId = useId();
   const interestsPanelId = useId();
   const archetypesPanelId = useId();
-  const locationPanelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const inComposer = variant === "composer";
 
@@ -184,24 +286,43 @@ export function ZimaSearchFilters({
       if (!root || root.contains(event.target as Node)) return;
       setInterestsOpen(false);
       setArchetypesOpen(false);
-      setLocationOpen(false);
     }
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
-  const archetypeButtonLabel =
-    filters.archetypes.length === 1
-      ? filters.archetypes[0]!
-      : filters.archetypes.length > 1
-        ? `Archetypes (${filters.archetypes.length})`
-        : "Archetypes";
+  const activeFilterCount =
+    filters.archetypes.length +
+    filters.interests.length +
+    (filters.activeOnly ? 1 : 0);
+
+  const archetypeButtonLabel = (() => {
+    if (filters.archetypes.length === 0) return "Archetypes";
+    if (filters.archetypes.length > 1) {
+      return `Archetypes (${filters.archetypes.length})`;
+    }
+    const selected = filters.archetypes[0]!;
+    const match = ZIMA_STORY_ARCHETYPES.find(
+      (option) => option.label === selected,
+    );
+    return match ? `${match.emoji} ${match.label}` : selected;
+  })();
   const interestButtonLabel =
     filters.interests.length === 1
       ? filters.interests[0]!
       : filters.interests.length > 1
         ? `Interests (${filters.interests.length})`
         : "Interests";
+
+  function toggleFiltersVisible() {
+    setFiltersVisible((open) => {
+      if (open) {
+        setInterestsOpen(false);
+        setArchetypesOpen(false);
+      }
+      return !open;
+    });
+  }
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
@@ -212,167 +333,161 @@ export function ZimaSearchFilters({
         role="group"
         aria-label="Search filters"
       >
-        <div className="relative">
-          <button
-            type="button"
-            aria-haspopup="listbox"
-            aria-expanded={locationOpen}
-            aria-controls={locationPanelId}
-            onClick={() => {
-              setInterestsOpen(false);
-              setArchetypesOpen(false);
-              setLocationOpen((open) => !open);
-            }}
-            className={`${jetbrainsMono.className} inline-flex h-8 shrink-0 items-center gap-1 bg-transparent px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-800 sm:text-[12px]`}
-          >
-            Location: {zimaSearchCityById(filters.city).label}
-            <svg
-              aria-hidden
-              viewBox="0 0 12 12"
-              className={`h-3 w-3 shrink-0 transition-transform ${locationOpen ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="square"
-              strokeLinejoin="miter"
+        <div
+          className="flex items-center gap-1"
+          role="group"
+          aria-label="Map layers"
+        >
+          {MAP_LAYER_PILLS.map((layer) => (
+            <MapLayerPill
+              key={layer.id}
+              label={layer.label}
+              selected={mapLayers[layer.id]}
+              onClick={() => toggleMapLayer(layer.id)}
             >
-              <path d="M2.5 4.5 6 8l3.5-3.5" />
-            </svg>
-          </button>
-          {locationOpen ? (
-            <ul
-              id={locationPanelId}
-              role="listbox"
-              aria-label="Choose a city"
-              className="absolute left-0 top-full z-50 mt-1 min-w-[12rem] border border-neutral-300 bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-              onMouseDown={(event) => event.stopPropagation()}
-            >
-              {ZIMA_SEARCH_CITIES.map((city) => {
-                const selected = filters.city === city.id;
-                return (
-                  <li key={city.id} role="option" aria-selected={selected}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onFiltersChange({ ...filters, city: city.id });
-                        setLocationOpen(false);
-                      }}
-                      className={`${jetbrainsMono.className} w-full px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide transition-colors sm:text-[12px] ${
-                        selected
-                          ? "text-white"
-                          : "text-neutral-800 hover:bg-neutral-100"
-                      }`}
-                      style={
-                        selected ? { backgroundColor: HOPAMINE_BLUE } : undefined
-                      }
-                    >
-                      {city.label}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
+              <MapLayerIcon layer={layer.id} />
+            </MapLayerPill>
+          ))}
         </div>
 
-        <div className="relative">
-          <FilterCheckbox
-            label={archetypeButtonLabel}
-            isOn={filters.archetypes.length > 0}
-            opensPopover
-            ariaExpanded={archetypesOpen}
-            ariaControls={archetypesPanelId}
-            onClick={() => {
-              setLocationOpen(false);
-              setInterestsOpen(false);
-              setArchetypesOpen((open) => !open);
-            }}
-          />
-          {archetypesOpen ? (
-            <div
-              id={archetypesPanelId}
-              role="dialog"
-              aria-label="Choose archetypes"
-              className="absolute left-0 top-full z-50 mt-1 w-[min(28rem,calc(100vw-2rem))] border border-neutral-300 bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-              onMouseDown={(event) => event.stopPropagation()}
-            >
-              <p
-                className={`${jetbrainsMono.className} mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-600`}
-              >
-                Archetypes
-              </p>
-              <div className="grid max-h-52 grid-cols-2 gap-x-3 gap-y-0.5 overflow-y-auto">
-                {ZIMA_ARCHETYPES.map((archetype) => (
-                  <FilterCheckbox
-                    key={archetype}
-                    className="w-full"
-                    label={archetype}
-                    isOn={filters.archetypes.includes(archetype)}
-                    onClick={() =>
-                      onFiltersChange({
-                        ...filters,
-                        archetypes: toggleInList(filters.archetypes, archetype),
-                      })
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="relative">
-          <FilterCheckbox
-            label={interestButtonLabel}
-            isOn={filters.interests.length > 0}
-            opensPopover
-            ariaExpanded={interestsOpen}
-            ariaControls={interestsPanelId}
-            onClick={() => {
-              setLocationOpen(false);
-              setArchetypesOpen(false);
-              setInterestsOpen((open) => !open);
-            }}
-          />
-          {interestsOpen ? (
-            <div
-              id={interestsPanelId}
-              role="dialog"
-              aria-label="Choose interests"
-              className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] border border-neutral-300 bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-              onMouseDown={(event) => event.stopPropagation()}
-            >
-              <p
-                className={`${jetbrainsMono.className} mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-600`}
-              >
-                Interests
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {ZIMA_INTERESTS.map((interest) => (
-                  <ChipButton
-                    key={interest}
-                    label={interest}
-                    selected={filters.interests.includes(interest)}
-                    onClick={() =>
-                      onFiltersChange({
-                        ...filters,
-                        interests: toggleInList(filters.interests, interest),
-                      })
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <FilterCheckbox
-          label="Active"
-          isOn={filters.activeOnly}
-          onClick={() =>
-            onFiltersChange({ ...filters, activeOnly: !filters.activeOnly })
-          }
+        <span
+          aria-hidden
+          className="mx-0.5 hidden h-4 w-px bg-neutral-300 sm:inline-block"
         />
+
+        <button
+          type="button"
+          aria-expanded={filtersVisible}
+          aria-controls={filtersPanelId}
+          onClick={toggleFiltersVisible}
+          className={`${jetbrainsMono.className} inline-flex h-8 shrink-0 items-center gap-1.5 px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-700 transition-colors hover:text-neutral-900 sm:text-[12px]`}
+        >
+          Filters
+          {activeFilterCount > 0 ? (
+            <span
+              className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-semibold text-white"
+              style={{ backgroundColor: HOPAMINE_BLUE }}
+            >
+              {activeFilterCount}
+            </span>
+          ) : null}
+          <svg
+            aria-hidden
+            viewBox="0 0 12 12"
+            className={`h-3 w-3 transition-transform ${filtersVisible ? "rotate-90" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="square"
+          >
+            <path d="M4.5 2.5 8 6 4.5 9.5" />
+          </svg>
+        </button>
+
+        {filtersVisible ? (
+          <div id={filtersPanelId} className="flex flex-wrap items-center gap-1.5">
+            <div className="relative">
+              <FilterCheckbox
+                label={archetypeButtonLabel}
+                isOn={filters.archetypes.length > 0}
+                opensPopover
+                ariaExpanded={archetypesOpen}
+                ariaControls={archetypesPanelId}
+                onClick={() => {
+                  setInterestsOpen(false);
+                  setArchetypesOpen((open) => !open);
+                }}
+              />
+              {archetypesOpen ? (
+                <div
+                  id={archetypesPanelId}
+                  role="dialog"
+                  aria-label="Choose archetypes"
+                  className="absolute left-0 top-full z-50 mt-1 w-[min(28rem,calc(100vw-2rem))] border border-neutral-300 bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
+                  <p
+                    className={`${jetbrainsMono.className} mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-600`}
+                  >
+                    Archetypes
+                  </p>
+                  <div className="grid max-h-64 grid-cols-1 gap-y-0.5 overflow-y-auto sm:grid-cols-2">
+                    {ZIMA_STORY_ARCHETYPES.map((archetype) => (
+                      <FilterCheckbox
+                        key={archetype.label}
+                        className="w-full"
+                        label={`${archetype.emoji} ${archetype.label}`}
+                        titleHint={archetype.description}
+                        isOn={filters.archetypes.includes(archetype.label)}
+                        onClick={() =>
+                          onFiltersChange({
+                            ...filters,
+                            archetypes: toggleInList(
+                              filters.archetypes,
+                              archetype.label,
+                            ),
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="relative">
+              <FilterCheckbox
+                label={interestButtonLabel}
+                isOn={filters.interests.length > 0}
+                opensPopover
+                ariaExpanded={interestsOpen}
+                ariaControls={interestsPanelId}
+                onClick={() => {
+                  setArchetypesOpen(false);
+                  setInterestsOpen((open) => !open);
+                }}
+              />
+              {interestsOpen ? (
+                <div
+                  id={interestsPanelId}
+                  role="dialog"
+                  aria-label="Choose interests"
+                  className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] border border-neutral-300 bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
+                  <p
+                    className={`${jetbrainsMono.className} mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-600`}
+                  >
+                    Interests
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ZIMA_INTERESTS.map((interest) => (
+                      <ChipButton
+                        key={interest}
+                        label={interest}
+                        selected={filters.interests.includes(interest)}
+                        onClick={() =>
+                          onFiltersChange({
+                            ...filters,
+                            interests: toggleInList(filters.interests, interest),
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <FilterCheckbox
+              label="Active"
+              isOn={filters.activeOnly}
+              onClick={() =>
+                onFiltersChange({ ...filters, activeOnly: !filters.activeOnly })
+              }
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

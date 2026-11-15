@@ -63,6 +63,7 @@ function EditProjectModal({
           initialField={project.field}
           initialTitle={project.title}
           initialBlurb={project.blurb}
+          initialLocation={project.location ?? ""}
           initialLiveUrl={project.liveUrl ?? ""}
           initialJoinCode={project.joinCode ?? ""}
           onCancel={onClose}

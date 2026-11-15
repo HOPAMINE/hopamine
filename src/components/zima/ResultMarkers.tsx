@@ -22,8 +22,8 @@ type Host = {
 type Props = {
   results: MarkerInput[];
   /**
-   * Cards stay hidden below this zoom. The globe passes 0 so faces stay on
-   * the sphere; the old city map waited until streets were readable.
+   * Cards stay hidden below this zoom. Globe / search use NYC_MIN_ZOOM so the
+   * main globe shows dots only; profiles appear on zoom-in or search.
    */
   minZoom?: number;
   selectedResultId?: string | null;
@@ -125,10 +125,24 @@ export default function ResultMarkers({
     }
   }, [hosts, onSelectResult, selectedResultId]);
 
+  // Only pan when selection changes AND the pin is off-screen (list/card pick).
+  // Zoomed-in map clicks must not easeTo — that felt like a teleport.
+  // Ignore `results` churn (geocode) so coord updates don't yank the camera.
+  const lastPannedSelectionRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!map || !selectedResultId) return;
+    if (!map || !selectedResultId) {
+      lastPannedSelectionRef.current = null;
+      return;
+    }
+    if (lastPannedSelectionRef.current === selectedResultId) return;
+
     const result = results.find((item) => item.id === selectedResultId);
     if (!result) return;
+
+    lastPannedSelectionRef.current = selectedResultId;
+
+    if (map.getBounds().contains([result.lng, result.lat])) return;
+
     map.easeTo({
       center: [result.lng, result.lat],
       duration: 650,

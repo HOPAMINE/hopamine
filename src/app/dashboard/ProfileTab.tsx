@@ -11,7 +11,6 @@ import { HACKATHON_FIELDS, getHackathonProjectByIndex, type HackathonField } fro
 import { primaryProjectLink } from "@/lib/projectUrls";
 import { getPublicProfileUrlForUser } from "@/lib/profileUrls";
 import { AddProjectCard } from "../../../components/projects/AddProjectCard";
-import { AddProjectForm } from "../../../components/projects/AddProjectForm";
 import { EditProjectForm } from "../../../components/projects/EditProjectForm";
 import { JoinProjectForm } from "../../../components/projects/JoinProjectForm";
 import {
@@ -734,32 +733,6 @@ function JoinProjectModal({
   );
 }
 
-function AddProjectModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: () => void;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="w-full max-w-2xl rounded-[24px] bg-white p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Add project"
-      >
-        <AddProjectForm variant="light" onCancel={onClose} onCreated={onCreated} />
-      </div>
-    </div>
-  );
-}
-
 function EditProjectModal({
   project,
   onClose,
@@ -791,6 +764,7 @@ function EditProjectModal({
           initialField={project.field}
           initialTitle={project.title}
           initialBlurb={project.blurb}
+          initialLocation={project.location ?? ""}
           initialLiveUrl={project.liveUrl ?? ""}
           initialJoinCode={project.joinCode ?? ""}
           onCancel={onClose}
@@ -936,7 +910,6 @@ function RightPanel({
   const badges = readOnly ? userBadges : myBadges;
   const ensureMyBadges = useMutation(api.badges.ensureMine);
   const [siteOrigin, setSiteOrigin] = useState("");
-  const [isAddingProject, setIsAddingProject] = useState(false);
   const [isJoiningProject, setIsJoiningProject] = useState(false);
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<Id<"projects"> | null>(null);
@@ -982,7 +955,7 @@ function RightPanel({
             </h2>
             {!readOnly ? (
               <ProjectSectionHeaderActions
-                onAddProject={() => setIsAddingProject(true)}
+                onAddProject={() => router.push("/onboard/project")}
                 onJoinWithCode={() => setIsJoiningProject(true)}
               />
             ) : null}
@@ -998,7 +971,7 @@ function RightPanel({
                 <AddProjectCard
                   variant="dashboard"
                   className="w-full"
-                  onClick={() => setIsAddingProject(true)}
+                  onClick={() => router.push("/onboard/project")}
                 />
               </div>
               )
@@ -1109,13 +1082,6 @@ function RightPanel({
           </div>
         </div>
       </section>
-
-      {!readOnly && isAddingProject ? (
-        <AddProjectModal
-          onClose={() => setIsAddingProject(false)}
-          onCreated={() => setIsAddingProject(false)}
-        />
-      ) : null}
 
       {!readOnly && isJoiningProject ? (
         <JoinProjectModal

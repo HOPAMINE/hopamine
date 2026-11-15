@@ -1,8 +1,14 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import Image from "next/image";
+import { api } from "../../../convex/_generated/api";
 import { jetbrainsMono, newsreader } from "../../../fonts";
-import { profileArchetypes } from "../../../shared/zimaVocabulary";
+import {
+  profileArchetypes,
+  profileFreeformSkills,
+  profileSkills,
+} from "../../../shared/zimaVocabulary";
 import type { ZimaProfileData } from "./ZimaProfileEditModal";
 
 const HOPAMINE_BLUE = "#00a6f3";
@@ -38,12 +44,155 @@ function ProfileField({
   );
 }
 
+function TagList({
+  label,
+  items,
+}: {
+  label: string;
+  items: string[];
+}) {
+  return (
+    <div className="space-y-1">
+      <p
+        className={`${jetbrainsMono.className} text-[11px] font-semibold uppercase tracking-wide text-neutral-500`}
+      >
+        {label}
+      </p>
+      {items.length > 0 ? (
+        <ul className="flex flex-wrap gap-2">
+          {items.map((item) => (
+            <li
+              key={item}
+              className={`${jetbrainsMono.className} rounded-full bg-white px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-neutral-800`}
+            >
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p
+          className={`${jetbrainsMono.className} text-[14px] leading-relaxed text-neutral-800`}
+        >
+          —
+        </p>
+      )}
+    </div>
+  );
+}
+
+type ProfileProject = {
+  _id: string;
+  title: string;
+  blurb: string;
+  field: string;
+  location?: string;
+  liveUrl?: string;
+  demoUrl?: string;
+  repoUrl?: string;
+  members: { name: string }[];
+};
+
+function ProjectsSection({ projects }: { projects: ProfileProject[] | undefined }) {
+  return (
+    <div className="space-y-2">
+      <p
+        className={`${jetbrainsMono.className} text-[11px] font-semibold uppercase tracking-wide text-neutral-500`}
+      >
+        Projects
+      </p>
+      {projects === undefined ? (
+        <p
+          className={`${jetbrainsMono.className} text-[14px] leading-relaxed text-neutral-500`}
+        >
+          Loading projects…
+        </p>
+      ) : projects.length === 0 ? (
+        <p
+          className={`${jetbrainsMono.className} text-[14px] leading-relaxed text-neutral-800`}
+        >
+          —
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {projects.map((project) => {
+            const href =
+              project.liveUrl || project.demoUrl || project.repoUrl || undefined;
+            const memberNames = project.members
+              .map((member) => member.name.trim())
+              .filter(Boolean)
+              .slice(0, 4);
+            const content = (
+              <>
+                <div className="flex items-start justify-between gap-2">
+                  <p
+                    className={`${jetbrainsMono.className} text-[14px] font-semibold uppercase tracking-wide text-neutral-900`}
+                  >
+                    {project.title}
+                  </p>
+                  <span
+                    className={`${jetbrainsMono.className} shrink-0 text-[11px] font-semibold uppercase tracking-wide text-neutral-500`}
+                  >
+                    {project.field}
+                  </span>
+                </div>
+                {project.location?.trim() ? (
+                  <p
+                    className={`${jetbrainsMono.className} mt-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-500`}
+                  >
+                    Based in {project.location.trim()}
+                  </p>
+                ) : null}
+                {project.blurb.trim() ? (
+                  <p
+                    className={`${jetbrainsMono.className} mt-1 text-[13px] leading-relaxed text-neutral-700`}
+                  >
+                    {project.blurb}
+                  </p>
+                ) : null}
+                {memberNames.length > 0 ? (
+                  <p
+                    className={`${jetbrainsMono.className} mt-1.5 text-[11px] uppercase tracking-wide text-neutral-500`}
+                  >
+                    With {memberNames.join(", ")}
+                    {project.members.length > memberNames.length ? "…" : ""}
+                  </p>
+                ) : null}
+              </>
+            );
+
+            return (
+              <li key={project._id}>
+                {href ? (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors hover:border-[#00a6f3]"
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3">
+                    {content}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 type ZimaProfileCardProps = {
   user: ZimaProfileData;
   onEdit: () => void;
 };
 
 export function ZimaProfileCard({ user, onEdit }: ZimaProfileCardProps) {
+  const projects = useQuery(api.projects.listMine);
+
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 p-6">
       <div className="flex items-start gap-4 text-left">
@@ -86,32 +235,16 @@ export function ZimaProfileCard({ user, onEdit }: ZimaProfileCardProps) {
 
       <div className="mt-6 space-y-4 border-t border-neutral-200 pt-6">
         <ProfileField label="Location" value={user.location} />
-        <div className="space-y-1">
-          <p
-            className={`${jetbrainsMono.className} text-[11px] font-semibold uppercase tracking-wide text-neutral-500`}
-          >
-            Archetypes
-          </p>
-          {user.archetypes.length > 0 ? (
-            <ul className="flex flex-wrap gap-2">
-              {user.archetypes.map((archetype) => (
-                <li
-                  key={archetype}
-                  className={`${jetbrainsMono.className} rounded-full bg-white px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-neutral-800`}
-                >
-                  {archetype}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p
-              className={`${jetbrainsMono.className} text-[14px] leading-relaxed text-neutral-800`}
-            >
-              —
-            </p>
-          )}
-        </div>
         <ProfileField label="Bio" value={user.bio} />
+        <TagList
+          label="Skills"
+          items={profileSkills({
+            archetypes: user.archetypes,
+            skills: user.skills,
+          })}
+        />
+        <TagList label="Archetypes" items={user.archetypes} />
+        <ProjectsSection projects={projects} />
       </div>
 
       <button
@@ -142,5 +275,6 @@ export function toZimaProfileData(user: {
     bio: user.bio,
     location: user.location,
     archetypes: profileArchetypes(user),
+    skills: profileFreeformSkills(user),
   };
 }

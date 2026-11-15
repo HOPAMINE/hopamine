@@ -10,7 +10,7 @@ import { roboto, robotoMono } from "../../fonts";
 import { ClaimNavbar } from "./ClaimNavbar";
 import { ClaimParticipationCard } from "./ClaimParticipationCard";
 import { downloadParticipationCard } from "./downloadParticipationCard";
-import { projectMatchesQuery, toHackathonProject } from "./directoryProject";
+import { toHackathonProject } from "./directoryProject";
 import { PARTICIPATION_CARD_WIDTH } from "./participationCardStyles";
 
 const inputClassName = `${robotoMono.className} w-full rounded-lg border border-white/25 bg-[#126609] px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/50`;
@@ -25,7 +25,6 @@ export function ClaimParticipationContent() {
   const { user } = useUser();
   const participation = useQuery(api.hackathonParticipations.getMine);
   const projectClaim = useQuery(api.hackathonClaims.getMyProject);
-  const directoryProjects = useQuery(api.projects.listHackathonDirectory);
   const convexUser = useQuery(api.users.getCurrentUser, user ? {} : "skip");
   const claimParticipation = useMutation(api.hackathonParticipations.claim);
   const claimProject = useMutation(api.hackathonClaims.claimProject);
@@ -33,6 +32,7 @@ export function ClaimParticipationContent() {
   const cardRef = useRef<HTMLElement>(null);
 
   const [search, setSearch] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -50,19 +50,20 @@ export function ClaimParticipationContent() {
     }
   }, [projectClaim?.projectIndex]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(search), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const directoryProjects = useQuery(api.projects.searchHackathonDirectory, {
+    query: debouncedQuery,
+  });
+  const filteredProjects = directoryProjects ?? [];
+
   const displayName =
     convexUser?.name?.trim() || user?.fullName || user?.firstName || "Builder";
   const claimed = participation !== null && participation !== undefined;
   const projectClaimed = projectClaim !== null && projectClaim !== undefined;
-
-  const filteredProjects = useMemo(() => {
-    if (!directoryProjects) return [];
-    const query = search.trim().toLowerCase();
-    return directoryProjects.filter((project) => {
-      if (!query) return true;
-      return projectMatchesQuery(project, query);
-    });
-  }, [directoryProjects, search]);
 
   const selectedDirectoryProject =
     selectedIndex === null

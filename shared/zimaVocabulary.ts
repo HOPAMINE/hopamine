@@ -47,51 +47,142 @@ export const ZIMA_STORY_ARCHETYPES = [
     emoji: "🌱",
     label: "The Seedcaster",
     description: "They plant what others haven't imagined yet.",
+    skills: [
+      "Regenerative agriculture",
+      "Composting systems",
+      "Food forests",
+      "Urban farming",
+      "Seed saving",
+      "Agroforestry",
+    ],
   },
   {
     emoji: "⚙️",
     label: "The Fabricant",
     description: "If it doesn't exist, they build it.",
+    skills: [
+      "Mechanical engineering",
+      "Fabrication",
+      "Prototyping",
+      "CAD/CAM",
+      "Open-source hardware",
+      "Maker culture",
+    ],
   },
   {
     emoji: "🍄",
     label: "The Mycelian",
     description: "They think in networks and grow in the dark.",
+    skills: [
+      "Biology",
+      "Chemistry",
+      "Biomaterials",
+      "Fermentation",
+      "Ecological science",
+      "Bioremediation",
+    ],
   },
   {
     emoji: "🏗️",
     label: "The Terraformer",
     description: "They redesign the spaces we inhabit.",
+    skills: [
+      "Sustainable architecture",
+      "Passive design",
+      "Urban ecology",
+      "Community land trusts",
+      "Natural building",
+    ],
   },
   {
     emoji: "💻",
     label: "The Developer",
     description: "They write the tools of sovereignty.",
+    skills: [
+      "Software engineering",
+      "AI/ML",
+      "Data pipelines",
+      "Web dev",
+      "Automation",
+      "Prompt engineering",
+    ],
   },
   {
     emoji: "🎨",
     label: "The Artisan",
-    description: "They make the future beautiful enough to want.",
+    description:
+      "They call on our emotions to inspire a future beautiful.",
+    skills: [
+      "Visual design",
+      "Music",
+      "Textile/material work",
+      "UI/UX",
+      "Solarpunk aesthetics",
+      "World-building",
+    ],
   },
   {
     emoji: "📡",
     label: "The Chronicler",
     description: "They make sure the work gets seen.",
+    skills: [
+      "Storytelling",
+      "Video production",
+      "Writing",
+      "Social media",
+      "Community media",
+      "Archiving",
+    ],
   },
   {
     emoji: "🌿",
     label: "The Cultivar",
     description: "They bridge the lab and the land.",
+    skills: [
+      "Food science",
+      "Plant medicine",
+      "Nutrition systems",
+      "Crop research",
+      "Soil biology",
+    ],
   },
   {
     emoji: "🔗",
     label: "The Loomkeeper",
     description: "They hold the network together.",
+    skills: [
+      "Community building",
+      "Event production",
+      "Fundraising",
+      "Partnerships",
+      "Grassroots organizing",
+    ],
   },
   {
     emoji: "📜",
     label: "The Verdant",
     description: "They change the rules of the game.",
+    skills: [
+      "Policy",
+      "Advocacy",
+      "Circular economics",
+      "Environmental law",
+      "Systems governance",
+      "Funding strategy",
+    ],
+  },
+  {
+    emoji: "🧠",
+    label: "The Ethnologist",
+    description: "They protect our humanity.",
+    skills: [
+      "Anthropology",
+      "Sociology",
+      "Psychology",
+      "Archaeology",
+      "Linguistics",
+      "Geography",
+    ],
   },
 ] as const;
 
@@ -198,6 +289,75 @@ export function profileArchetypes(user: {
     seen.add(key);
     labels.push(label);
   }
+  return labels;
+}
+
+const storyArchetypeByLabel = new Map(
+  ZIMA_STORY_ARCHETYPES.map((archetype) => [archetype.label.toLowerCase(), archetype]),
+);
+
+const storyArchetypeLabelSet = new Set(
+  ZIMA_STORY_ARCHETYPES.map((archetype) => archetype.label.toLowerCase()),
+);
+
+/**
+ * Freeform skills saved on the user (excludes archetype labels that were
+ * historically mirrored into `skills`).
+ */
+export function profileFreeformSkills(user: {
+  skills?: string[];
+}): string[] {
+  const seen = new Set<string>();
+  const labels: string[] = [];
+  for (const skill of user.skills ?? []) {
+    const trimmed = skill.trim().replace(/\s+/g, " ");
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    if (storyArchetypeLabelSet.has(key)) continue;
+    if (ZIMA_LEGACY_ARCHETYPES.some((label) => label.toLowerCase() === key)) {
+      continue;
+    }
+    seen.add(key);
+    labels.push(trimmed);
+  }
+  return labels;
+}
+
+/**
+ * Skills for the profile card: freeform skills that aren't archetype labels,
+ * plus the skill lists tied to selected story archetypes (from roles.md).
+ */
+export function profileSkills(user: {
+  archetypes?: string[];
+  skills?: string[];
+}): string[] {
+  const archetypes = profileArchetypes(user);
+  const seen = new Set<string>();
+  const labels: string[] = [];
+
+  function push(raw: string) {
+    const trimmed = raw.trim().replace(/\s+/g, " ");
+    if (!trimmed) return;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) return;
+    if (storyArchetypeLabelSet.has(key)) return;
+    seen.add(key);
+    labels.push(trimmed);
+  }
+
+  for (const skill of profileFreeformSkills(user)) {
+    push(skill);
+  }
+
+  for (const archetype of archetypes) {
+    const story = storyArchetypeByLabel.get(archetype.toLowerCase());
+    if (!story) continue;
+    for (const skill of story.skills) {
+      push(skill);
+    }
+  }
+
   return labels;
 }
 

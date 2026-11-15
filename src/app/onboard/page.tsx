@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useMutation, useConvexAuth, useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { CLAIM_PARTICIPATION_PATH } from "@/lib/claimRoutes"
+import { MoviePicker } from "@/components/onboard/MoviePicker"
+import { MusicPicker } from "@/components/onboard/MusicPicker"
+import { type MusicTrack } from "@/lib/music-tracks"
+import { type TmdbMovie } from "@/lib/tmdb"
 import Lottie from "lottie-react"
 import globeAnimation from "../../../public/globe.json"
 import { robotoFlex } from "../../../fonts"
@@ -114,6 +118,12 @@ function OnboardPageContent() {
   const [editingLearning, setEditingLearning] = useState(false)
   const [tempLearning, setTempLearning] = useState("")
 
+  const [selectedMovies, setSelectedMovies] = useState<TmdbMovie[]>([])
+  const [moviesDone, setMoviesDone] = useState(false)
+
+  const [selectedMusic, setSelectedMusic] = useState<MusicTrack[]>([])
+  const [musicDone, setMusicDone] = useState(false)
+
   const [discord, setDiscord] = useState("")
   const [discordError, setDiscordError] = useState("")
   const [discordDone, setDiscordDone] = useState(false)
@@ -218,6 +228,18 @@ function OnboardPageContent() {
     setEditingLearning(false)
   }
 
+  function submitMovies() {
+    if (selectedMovies.length === 0) return
+    setMoviesDone(true)
+    scrollDown()
+  }
+
+  function submitMusic() {
+    if (selectedMusic.length === 0) return
+    setMusicDone(true)
+    scrollDown()
+  }
+
   function submitDiscord() {
     const trimmed = discord.trim().replace(/^@/, "")
     if (trimmed && !/^[a-zA-Z0-9_.]{2,32}(#\d{4})?$/.test(trimmed)) {
@@ -245,6 +267,28 @@ function OnboardPageContent() {
         vision,
         why,
         learning,
+        favoriteMovies:
+          selectedMovies.length > 0
+            ? selectedMovies.map((movie) => ({
+                id: movie.id,
+                title: movie.title,
+                year: movie.year ?? undefined,
+                posterUrl: movie.posterUrl ?? undefined,
+                tmdbUrl: movie.tmdbUrl,
+              }))
+            : undefined,
+        favoriteMusic:
+          selectedMusic.length > 0
+            ? selectedMusic.map((track) => ({
+                id: track.id,
+                title: track.title,
+                artist: track.artist,
+                album: track.album,
+                artworkUrl: track.artworkUrl ?? undefined,
+                previewUrl: track.previewUrl ?? undefined,
+                geniusUrl: track.geniusUrl ?? undefined,
+              }))
+            : undefined,
         discord: discord.trim() || undefined,
       })
       if (fromClaim) {
@@ -348,17 +392,24 @@ function OnboardPageContent() {
                 </a>
               </motion.div>
 
-              {/* Secondary — dashboard */}
+              {/* Soft offer — first project, skippable */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.75, duration: 0.4 }}
+                className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"
               >
+                <button
+                  onClick={() => router.push("/onboard/project?from=onboard")}
+                  className="font-mono text-sm uppercase tracking-wide px-6 py-2.5 border-2 border-accent-navbar bg-accent-navbar text-white transition-colors cursor-pointer hover:brightness-[0.97]"
+                >
+                  Add your first project →
+                </button>
                 <button
                   onClick={() => router.push("/dashboard")}
                   className={outlineBtn(true)}
                 >
-                  Go to your dashboard →
+                  Skip for now →
                 </button>
               </motion.div>
             </motion.div>
@@ -931,9 +982,165 @@ function OnboardPageContent() {
                 )}
               </AnimatePresence>
 
-              {/* Q8 — Discord ──────────────────────────────────────────── */}
+              {/* Q8 — Movies ───────────────────────────────────────────── */}
               <AnimatePresence>
                 {learningDone && (
+                  <motion.div
+                    key="q8-movies"
+                    initial={{ opacity: 0, y: 22 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: "easeOut" }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {!moviesDone ? (
+                        <motion.div key="q8m-ask" exit={{ opacity: 0, transition: { duration: 0.2 } }}>
+                          <p className={`${questionClass} mb-1`}>
+                            What are some of your favorite movies?
+                          </p>
+                          <p className="font-mono text-xs text-neutral-400 mb-5">
+                            Any culture. Search and pick a few.
+                          </p>
+                          <MoviePicker selected={selectedMovies} onChange={setSelectedMovies} />
+                          <div className="mt-5 flex items-center gap-3">
+                            <button
+                              onClick={submitMovies}
+                              disabled={selectedMovies.length === 0}
+                              className={outlineBtn(selectedMovies.length > 0)}
+                            >
+                              Continue
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedMovies([])
+                                setMoviesDone(true)
+                                scrollDown()
+                              }}
+                              className={smallOutlineBtn}
+                            >
+                              Skip
+                            </button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="q8m-done"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5 }}
+                          onClick={() => setMoviesDone(false)}
+                          className="cursor-pointer hover:opacity-70 transition-opacity group"
+                        >
+                          <p className={`${questionAnswerClass} mb-3`}>
+                            Favorite movies:
+                            <span className="ml-2 font-mono text-xs text-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity align-middle">
+                              edit
+                            </span>
+                          </p>
+                          {selectedMovies.length > 0 ? (
+                            <ul className="flex flex-col gap-1.5">
+                              {selectedMovies.map((movie) => (
+                                <li
+                                  key={movie.id}
+                                  className={`${robotoFlex.className} text-2xl text-accent-navbar`}
+                                >
+                                  {movie.title}
+                                  {movie.year ? ` (${movie.year})` : ""}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className={`${robotoFlex.className} text-2xl text-accent-navbar`}>
+                              skipped
+                            </p>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Q9 — Music ────────────────────────────────────────────── */}
+              <AnimatePresence>
+                {moviesDone && (
+                  <motion.div
+                    key="q9-music"
+                    initial={{ opacity: 0, y: 22 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: "easeOut" }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {!musicDone ? (
+                        <motion.div key="q9mu-ask" exit={{ opacity: 0, transition: { duration: 0.2 } }}>
+                          <p className={`${questionClass} mb-1`}>
+                            What kind of music do you listen to?
+                          </p>
+                          <p className="font-mono text-xs text-neutral-400 mb-5">
+                            Search songs or artists and pick a few.
+                          </p>
+                          <MusicPicker selected={selectedMusic} onChange={setSelectedMusic} />
+                          <div className="mt-5 flex items-center gap-3">
+                            <button
+                              onClick={submitMusic}
+                              disabled={selectedMusic.length === 0}
+                              className={outlineBtn(selectedMusic.length > 0)}
+                            >
+                              Continue
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedMusic([])
+                                setMusicDone(true)
+                                scrollDown()
+                              }}
+                              className={smallOutlineBtn}
+                            >
+                              Skip
+                            </button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="q9mu-done"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5 }}
+                          onClick={() => setMusicDone(false)}
+                          className="cursor-pointer hover:opacity-70 transition-opacity group"
+                        >
+                          <p className={`${questionAnswerClass} mb-3`}>
+                            Music you listen to:
+                            <span className="ml-2 font-mono text-xs text-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity align-middle">
+                              edit
+                            </span>
+                          </p>
+                          {selectedMusic.length > 0 ? (
+                            <ul className="flex flex-col gap-1.5">
+                              {selectedMusic.map((track) => (
+                                <li
+                                  key={track.id}
+                                  className={`${robotoFlex.className} text-2xl text-accent-navbar`}
+                                >
+                                  {track.title}
+                                  <span className="text-neutral-400"> — {track.artist}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className={`${robotoFlex.className} text-2xl text-accent-navbar`}>
+                              skipped
+                            </p>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Q10 — Discord ─────────────────────────────────────────── */}
+              <AnimatePresence>
+                {musicDone && (
                   <motion.div
                     key="q7"
                     initial={{ opacity: 0, y: 22 }}

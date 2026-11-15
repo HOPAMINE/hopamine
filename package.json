@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "build:cities": "node scripts/build-world-cities.mjs",
     "postinstall": "node scripts/copy-maplibre-worker.mjs"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "all-the-cities": "^3.1.0",
     "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",

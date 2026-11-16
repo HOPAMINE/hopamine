@@ -7,6 +7,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { HACKATHON_FIELDS, type HackathonField } from "@/lib/hackathonDirectory";
 import { robotoMono } from "../../fonts";
 import { ProjectMemberPicker } from "./ProjectMemberPicker";
+import { ProjectSeekingPicker } from "./ProjectSeekingPicker";
 
 type AddProjectFormProps = {
   onCancel: () => void;
@@ -45,6 +46,8 @@ export function AddProjectForm({ onCancel, onCreated, variant = "dark" }: AddPro
   const [blurb, setBlurb] = useState("");
   const [location, setLocation] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
+  const [lookingForContributors, setLookingForContributors] = useState(false);
+  const [lookingToHire, setLookingToHire] = useState(false);
   const [inviteUserIds, setInviteUserIds] = useState<Id<"users">[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -93,6 +96,8 @@ export function AddProjectForm({ onCancel, onCreated, variant = "dark" }: AddPro
         blurb: trimmedBlurb,
         location: location.trim() || undefined,
         liveUrl: liveUrl.trim() || undefined,
+        lookingForContributors,
+        lookingToHire,
         inviteUserIds,
       });
       onCreated();
@@ -184,6 +189,19 @@ export function AddProjectForm({ onCancel, onCreated, variant = "dark" }: AddPro
           onChange={(e) => setLiveUrl(e.target.value)}
           className={inputClassName}
           placeholder="https://yourproject.com"
+        />
+      </div>
+
+      <div>
+        <FieldLabel htmlFor="project-seeking" variant={variant}>
+          Looking for
+        </FieldLabel>
+        <ProjectSeekingPicker
+          variant={variant}
+          lookingForContributors={lookingForContributors}
+          lookingToHire={lookingToHire}
+          onLookingForContributorsChange={setLookingForContributors}
+          onLookingToHireChange={setLookingToHire}
         />
       </div>
 

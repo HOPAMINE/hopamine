@@ -7,6 +7,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { HACKATHON_FIELDS, type HackathonField } from "@/lib/hackathonDirectory";
 import { robotoMono } from "../../fonts";
 import { ProjectMemberPicker } from "./ProjectMemberPicker";
+import { ProjectSeekingPicker } from "./ProjectSeekingPicker";
 
 type EditProjectFormProps = {
   projectId: Id<"projects">;
@@ -16,6 +17,8 @@ type EditProjectFormProps = {
   initialLocation?: string;
   initialLiveUrl?: string;
   initialJoinCode?: string;
+  initialLookingForContributors?: boolean;
+  initialLookingToHire?: boolean;
   onCancel: () => void;
   onSaved: () => void;
   variant?: "dark" | "light";
@@ -52,6 +55,8 @@ export function EditProjectForm({
   initialLocation = "",
   initialLiveUrl = "",
   initialJoinCode = "",
+  initialLookingForContributors = false,
+  initialLookingToHire = false,
   onCancel,
   onSaved,
   variant = "dark",
@@ -63,6 +68,10 @@ export function EditProjectForm({
   const [blurb, setBlurb] = useState(initialBlurb);
   const [location, setLocation] = useState(initialLocation);
   const [liveUrl, setLiveUrl] = useState(initialLiveUrl);
+  const [lookingForContributors, setLookingForContributors] = useState(
+    initialLookingForContributors,
+  );
+  const [lookingToHire, setLookingToHire] = useState(initialLookingToHire);
   const [copiedJoinCode, setCopiedJoinCode] = useState(false);
   const [inviteUserIds, setInviteUserIds] = useState<Id<"users">[]>([]);
   const [saving, setSaving] = useState(false);
@@ -113,6 +122,8 @@ export function EditProjectForm({
         blurb: trimmedBlurb,
         location: location.trim(),
         liveUrl: liveUrl.trim(),
+        lookingForContributors,
+        lookingToHire,
         inviteUserIds: inviteUserIds.length > 0 ? inviteUserIds : undefined,
       });
       onSaved();
@@ -234,6 +245,19 @@ export function EditProjectForm({
           </div>
         </div>
       ) : null}
+
+      <div>
+        <FieldLabel htmlFor="edit-project-seeking" variant={variant}>
+          Looking for
+        </FieldLabel>
+        <ProjectSeekingPicker
+          variant={variant}
+          lookingForContributors={lookingForContributors}
+          lookingToHire={lookingToHire}
+          onLookingForContributorsChange={setLookingForContributors}
+          onLookingToHireChange={setLookingToHire}
+        />
+      </div>
 
       <div>
         <FieldLabel htmlFor="edit-project-members" variant={variant}>

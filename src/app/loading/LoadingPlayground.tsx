@@ -33,7 +33,7 @@ export function LoadingPlayground() {
     let cancelled = false;
 
     async function play(origin?: HexLoadOrigin) {
-      if (cancelled || playingRef.current || prefersReducedMotion()) return;
+      if (!canvas || cancelled || playingRef.current || prefersReducedMotion()) return;
       playingRef.current = true;
       setMarkVisible(false);
       canvas.style.visibility = "visible";

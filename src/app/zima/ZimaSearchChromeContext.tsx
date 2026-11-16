@@ -15,8 +15,8 @@ export type ZimaMapLayers = Record<ZimaMapLayerId, boolean>;
 
 export const DEFAULT_ZIMA_MAP_LAYERS: ZimaMapLayers = {
   people: true,
-  projects: true,
-  events: true,
+  projects: false,
+  events: false,
 };
 
 type ZimaSearchChromeContextValue = {

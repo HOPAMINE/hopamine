@@ -12,6 +12,7 @@ import {
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { ProjectMemberPicker } from "../../../components/projects/ProjectMemberPicker";
+import { ProjectSeekingPicker } from "../../../components/projects/ProjectSeekingPicker";
 import {
   HACKATHON_FIELDS,
   type HackathonField,
@@ -33,7 +34,8 @@ const STEP_FIELD = 1;
 const STEP_BLURB = 2;
 const STEP_LOCATION = 3;
 const STEP_LIVE_URL = 4;
-const STEP_INVITES = 5;
+const STEP_SEEKING = 5;
+const STEP_INVITES = 6;
 const LAST_STEP = STEP_INVITES;
 const STEP_COUNT = LAST_STEP + 1;
 
@@ -197,6 +199,8 @@ function ProjectOnboardContent() {
   const [blurb, setBlurb] = useState("");
   const [location, setLocation] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
+  const [lookingForContributors, setLookingForContributors] = useState(false);
+  const [lookingToHire, setLookingToHire] = useState(false);
   const [inviteUserIds, setInviteUserIds] = useState<Id<"users">[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -259,6 +263,11 @@ function ProjectOnboardContent() {
     goNext();
   }
 
+  function submitSeeking(event: FormEvent) {
+    event.preventDefault();
+    goNext();
+  }
+
   async function finish(event: FormEvent) {
     event.preventDefault();
     await createAndFinish();
@@ -282,6 +291,8 @@ function ProjectOnboardContent() {
         blurb: trimmedBlurb,
         location: location.trim() || undefined,
         liveUrl: liveUrl.trim() || undefined,
+        lookingForContributors,
+        lookingToHire,
         inviteUserIds,
       });
       setCreated(true);
@@ -455,6 +466,37 @@ function ProjectOnboardContent() {
               onChange={(event) => setLiveUrl(event.target.value)}
               className={inputClass}
               placeholder="https://yourproject.com"
+            />
+          </StepForm>
+        ) : null}
+
+        {step === STEP_SEEKING ? (
+          <StepForm
+            title="Are you looking for people?"
+            onSubmit={submitSeeking}
+            footer={
+              <OptionalStepFooter
+                canContinue
+                onSkip={() => {
+                  setLookingForContributors(false);
+                  setLookingToHire(false);
+                  goNext();
+                }}
+              />
+            }
+          >
+            <OptionalStepHint />
+            <p
+              className={`${jetbrainsMono.className} text-[13px] leading-relaxed text-neutral-600`}
+            >
+              Select any that apply — you can change this later.
+            </p>
+            <ProjectSeekingPicker
+              variant="onboard"
+              lookingForContributors={lookingForContributors}
+              lookingToHire={lookingToHire}
+              onLookingForContributorsChange={setLookingForContributors}
+              onLookingToHireChange={setLookingToHire}
             />
           </StepForm>
         ) : null}

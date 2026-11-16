@@ -46,6 +46,8 @@ const projectWithMembersValidator = v.object({
   demoUrl: v.optional(v.string()),
   repoUrl: v.optional(v.string()),
   joinCode: v.optional(v.string()),
+  lookingForContributors: v.optional(v.boolean()),
+  lookingToHire: v.optional(v.boolean()),
   createdAt: v.number(),
   updatedAt: v.number(),
   members: v.array(projectMemberSummaryValidator),
@@ -470,6 +472,8 @@ export const create = mutation({
     blurb: v.string(),
     location: v.optional(v.string()),
     liveUrl: v.optional(v.string()),
+    lookingForContributors: v.optional(v.boolean()),
+    lookingToHire: v.optional(v.boolean()),
     inviteUserIds: v.array(v.id("users")),
   },
   returns: v.id("projects"),
@@ -516,6 +520,8 @@ export const create = mutation({
       ? normalizeOptionalProjectUrl(args.liveUrl)
       : undefined;
     const joinCode = await generateUniqueJoinCode(ctx);
+    const lookingForContributors = args.lookingForContributors === true;
+    const lookingToHire = args.lookingToHire === true;
 
     const projectId = await ctx.db.insert("projects", {
       userId: user._id,
@@ -523,6 +529,8 @@ export const create = mutation({
       title,
       blurb,
       joinCode,
+      lookingForContributors,
+      lookingToHire,
       ...(normalizedLocation ? { location: normalizedLocation } : {}),
       ...(normalizedLiveUrl ? { liveUrl: normalizedLiveUrl } : {}),
       createdAt: now,
@@ -805,6 +813,8 @@ export const update = mutation({
     blurb: v.optional(v.string()),
     location: v.optional(v.string()),
     liveUrl: v.optional(v.string()),
+    lookingForContributors: v.optional(v.boolean()),
+    lookingToHire: v.optional(v.boolean()),
     inviteUserIds: v.optional(v.array(v.id("users"))),
   },
   returns: v.null(),
@@ -830,6 +840,8 @@ export const update = mutation({
       location?: string;
       liveUrl?: string;
       joinCode?: string;
+      lookingForContributors?: boolean;
+      lookingToHire?: boolean;
     } = {
       field: args.field ?? project.field,
       title,
@@ -843,6 +855,14 @@ export const update = mutation({
 
     if (args.liveUrl !== undefined) {
       patch.liveUrl = normalizeOptionalProjectUrl(args.liveUrl);
+    }
+
+    if (args.lookingForContributors !== undefined) {
+      patch.lookingForContributors = args.lookingForContributors === true;
+    }
+
+    if (args.lookingToHire !== undefined) {
+      patch.lookingToHire = args.lookingToHire === true;
     }
 
     if (!project.joinCode) {

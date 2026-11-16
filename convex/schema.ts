@@ -98,6 +98,10 @@ export default defineSchema({
     demoUrl: v.optional(v.string()),
     repoUrl: v.optional(v.string()),
     joinCode: v.optional(v.string()),
+    /** Open call for volunteer / open-source contributors. */
+    lookingForContributors: v.optional(v.boolean()),
+    /** Open call for paid / hired help. */
+    lookingToHire: v.optional(v.boolean()),
     /** Index into shared/hackathonProjects.ts for directory-seeded projects. */
     hackathonIndex: v.optional(v.number()),
     builderName: v.optional(v.string()),

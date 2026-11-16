@@ -333,28 +333,6 @@ export function ZimaSearchFilters({
         role="group"
         aria-label="Search filters"
       >
-        <div
-          className="flex items-center gap-1"
-          role="group"
-          aria-label="Map layers"
-        >
-          {MAP_LAYER_PILLS.map((layer) => (
-            <MapLayerPill
-              key={layer.id}
-              label={layer.label}
-              selected={mapLayers[layer.id]}
-              onClick={() => toggleMapLayer(layer.id)}
-            >
-              <MapLayerIcon layer={layer.id} />
-            </MapLayerPill>
-          ))}
-        </div>
-
-        <span
-          aria-hidden
-          className="mx-0.5 hidden h-4 w-px bg-neutral-300 sm:inline-block"
-        />
-
         <button
           type="button"
           aria-expanded={filtersVisible}
@@ -386,6 +364,28 @@ export function ZimaSearchFilters({
 
         {filtersVisible ? (
           <div id={filtersPanelId} className="flex flex-wrap items-center gap-1.5">
+            <div
+              className="flex items-center gap-1"
+              role="group"
+              aria-label="Map layers"
+            >
+              {MAP_LAYER_PILLS.map((layer) => (
+                <MapLayerPill
+                  key={layer.id}
+                  label={layer.label}
+                  selected={mapLayers[layer.id]}
+                  onClick={() => toggleMapLayer(layer.id)}
+                >
+                  <MapLayerIcon layer={layer.id} />
+                </MapLayerPill>
+              ))}
+            </div>
+
+            <span
+              aria-hidden
+              className="mx-0.5 hidden h-4 w-px bg-neutral-300 sm:inline-block"
+            />
+
             <div className="relative">
               <FilterCheckbox
                 label={archetypeButtonLabel}

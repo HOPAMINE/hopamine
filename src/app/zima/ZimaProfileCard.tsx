@@ -9,6 +9,7 @@ import {
   profileFreeformSkills,
   profileSkills,
 } from "../../../shared/zimaVocabulary";
+import { projectSeekingLabels } from "../../../shared/projectSeeking";
 import type { ZimaProfileData } from "./ZimaProfileEditModal";
 
 const HOPAMINE_BLUE = "#00a6f3";
@@ -89,6 +90,8 @@ type ProfileProject = {
   liveUrl?: string;
   demoUrl?: string;
   repoUrl?: string;
+  lookingForContributors?: boolean;
+  lookingToHire?: boolean;
   members: { name: string }[];
 };
 
@@ -121,6 +124,7 @@ function ProjectsSection({ projects }: { projects: ProfileProject[] | undefined 
               .map((member) => member.name.trim())
               .filter(Boolean)
               .slice(0, 4);
+            const seekingLabels = projectSeekingLabels(project);
             const content = (
               <>
                 <div className="flex items-start justify-between gap-2">
@@ -148,6 +152,18 @@ function ProjectsSection({ projects }: { projects: ProfileProject[] | undefined 
                   >
                     {project.blurb}
                   </p>
+                ) : null}
+                {seekingLabels.length > 0 ? (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {seekingLabels.map((label) => (
+                      <span
+                        key={label}
+                        className={`${jetbrainsMono.className} rounded-full border border-[#00a6f3]/40 bg-[#00a6f3]/8 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#0077b0]`}
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 ) : null}
                 {memberNames.length > 0 ? (
                   <p

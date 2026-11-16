@@ -10,6 +10,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { HACKATHON_FIELDS, getHackathonProjectByIndex, type HackathonField } from "@/lib/hackathonDirectory";
 import { primaryProjectLink } from "@/lib/projectUrls";
 import { getPublicProfileUrlForUser } from "@/lib/profileUrls";
+import { projectSeekingLabels } from "../../../shared/projectSeeking";
 import { AddProjectCard } from "../../../components/projects/AddProjectCard";
 import { EditProjectForm } from "../../../components/projects/EditProjectForm";
 import { JoinProjectForm } from "../../../components/projects/JoinProjectForm";
@@ -767,6 +768,8 @@ function EditProjectModal({
           initialLocation={project.location ?? ""}
           initialLiveUrl={project.liveUrl ?? ""}
           initialJoinCode={project.joinCode ?? ""}
+          initialLookingForContributors={project.lookingForContributors === true}
+          initialLookingToHire={project.lookingToHire === true}
           onCancel={onClose}
           onSaved={onSaved}
         />
@@ -1025,6 +1028,7 @@ function RightPanel({
                         builder={formatMemberNames(project.members, builderName)}
                         blurb={project.blurb}
                         liveUrl={project.liveUrl}
+                        seekingLabels={projectSeekingLabels(project)}
                         showHackathonBranding={false}
                         showLinkPills={false}
                         hoverEffect="none"

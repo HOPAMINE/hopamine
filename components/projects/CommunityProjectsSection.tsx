@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
 import { api } from "../../convex/_generated/api";
 import { HACKATHON_FIELDS } from "@/lib/hackathonDirectory";
+import { projectSeekingLabels } from "../../shared/projectSeeking";
 import { robotoFlex, robotoMono } from "../../fonts";
 import { ProjectActions } from "./ProjectActions";
 import { ProjectCard } from "./ProjectCard";
@@ -47,6 +48,7 @@ export function CommunityProjectsSection() {
               title={project.title}
               builder={formatMemberNames(project.members)}
               blurb={project.blurb}
+              seekingLabels={projectSeekingLabels(project)}
               onOpen={() => {}}
               showLinkPills={false}
               showHackathonBranding={false}

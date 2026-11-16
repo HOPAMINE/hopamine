@@ -8,6 +8,7 @@ import { HACKATHON_FIELDS } from "@/lib/hackathonDirectory";
 import { formatProjectTitle } from "@/lib/formatProjectTitle";
 import { robotoMono } from "../../fonts";
 import { AddProjectForm } from "./AddProjectForm";
+import { projectSeekingLabels } from "../../shared/projectSeeking";
 import { EditProjectForm } from "./EditProjectForm";
 import { JoinProjectForm } from "./JoinProjectForm";
 import { ProjectActionCards } from "./ProjectActionCards";
@@ -66,6 +67,8 @@ function EditProjectModal({
           initialLocation={project.location ?? ""}
           initialLiveUrl={project.liveUrl ?? ""}
           initialJoinCode={project.joinCode ?? ""}
+          initialLookingForContributors={project.lookingForContributors === true}
+          initialLookingToHire={project.lookingToHire === true}
           onCancel={onClose}
           onSaved={onSaved}
         />
@@ -131,6 +134,7 @@ export function ProjectsTabPanel({ builderName }: ProjectsTabPanelProps) {
                 title={project.title}
                 builder={formatMemberNames(project.members, builderName)}
                 blurb={project.blurb}
+                seekingLabels={projectSeekingLabels(project)}
                 onOpen={() => setSelectedProjectId(project._id)}
                 showLinkPills={false}
                 variant="dashboard"

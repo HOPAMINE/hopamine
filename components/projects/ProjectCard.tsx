@@ -29,6 +29,7 @@ type ProjectCardProps = Pick<
   /** Keep the green card on hover (dashboard profile projects). */
   hoverEffect?: "invert" | "none";
   externalHref?: string;
+  seekingLabels?: string[];
 };
 
 export function ProjectCard({
@@ -47,6 +48,7 @@ export function ProjectCard({
   interactive = true,
   hoverEffect = "invert",
   externalHref,
+  seekingLabels = [],
 }: ProjectCardProps) {
   const isCompact = size === "compact";
   const isStaticHover = hoverEffect === "none";
@@ -155,6 +157,24 @@ export function ProjectCard({
           >
             {blurb}
           </p>
+          {seekingLabels.length > 0 ? (
+            <div className={`mt-2 flex flex-wrap gap-1.5 ${isCompact ? "gap-1" : ""}`}>
+              {seekingLabels.map((label) => (
+                <span
+                  key={label}
+                  className={`${robotoMono.className} rounded-full border px-2 py-0.5 font-semibold uppercase tracking-wide ${
+                    isCompact ? "text-[9px]" : "text-[10px]"
+                  } ${
+                    variant === "dashboard"
+                      ? "border-accent-navbar/40 text-accent-navbar"
+                      : "border-white/45 text-white"
+                  } transition-colors duration-200 ${hoverText}`}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
     </>
   );

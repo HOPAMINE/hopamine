@@ -46,7 +46,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;o
 /* top bar — ink band with blue wordmark */
 .bar{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--white)}
 .bar .wrap{display:flex;align-items:center;gap:16px;height:56px}
-.mark{font-family:var(--t1);text-transform:uppercase;letter-spacing:var(--track-t1);font-weight:900;font-size:24px;color:var(--blue);text-decoration:none}
+.mark{white-space:nowrap;font-family:var(--t1);text-transform:uppercase;letter-spacing:var(--track-t1);font-weight:900;font-size:24px;color:var(--blue);text-decoration:none}
 .bar nav{display:flex;gap:6px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
 .bar nav::-webkit-scrollbar{display:none}
 .bar nav a{font-family:var(--micro);text-transform:uppercase;letter-spacing:var(--track-micro);font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;color:var(--white);border:1.5px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 11px}
@@ -61,8 +61,10 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;o
   -webkit-mask-image:radial-gradient(ellipse 55% 45% at 72% 60%,#000 0,transparent 70%);mask-image:radial-gradient(ellipse 55% 45% at 72% 60%,#000 0,transparent 70%)}
 .hero .wrap{position:relative;z-index:1}
 .hero .t1{font-size:clamp(56px,12vw,148px)}
-.hero .over{position:relative;display:block}
-.hero .over .script{position:absolute;left:.35em;top:-.42em;font-size:.62em;transform:rotate(-6deg);line-height:1;pointer-events:none}
+.hero h1 .l1,.hero h1 .l2{display:block}
+/* cursive overlay: reads in line ("How we Build Zima."), dips ~20% into the line below (spec §1.6) */
+.hero h1 .script{position:relative;z-index:2;display:inline-block;top:.42em;margin-left:.06em;font-size:.68em;transform:rotate(-6deg);line-height:1;pointer-events:none}
+.hero .stamp{margin-bottom:22px}
 .hero .sub{font-family:var(--read);font-size:clamp(19px,2.2vw,24px);max-width:560px;margin:26px 0 0;color:var(--ink)}
 .hero .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
 .hero .meta span{font-family:var(--micro);text-transform:uppercase;letter-spacing:var(--track-micro);font-weight:700;font-size:11px;background:var(--white);color:var(--ink);border-radius:999px;padding:7px 12px}
@@ -94,7 +96,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;o
 .mod.g-lime .rung{border-color:var(--ink)}
 .mod.g-lime .rule,.mod.g-cream .cards,.mod.g-lime .cards{border-top-color:var(--blue)}
 .mod.g-blue h2.t1{color:var(--white)}
-.mod h2 .script{font-size:.62em;margin-left:.12em;vertical-align:.35em;display:inline-block;transform:rotate(-5deg)}
+.mod h2 .script{position:relative;z-index:2;font-size:.7em;margin-left:-.18em;top:.28em;display:inline-block;transform:rotate(-6deg);line-height:1}
 .lede{max-width:720px;margin:10px 0 30px;font-size:19px}
 .mod.g-ink .lede{color:rgba(255,255,255,.78)}
 .rule{border:0;border-top:2px solid currentColor;margin:0 0 6px}

@@ -157,7 +157,7 @@
       '<header class="bar"><div class="wrap"><a class="mark" href="#top">Zima HQ</a><span class="env' + (IS_LOCAL ? " local" : "") + '">' + envLabel + "</span><nav>" + nav + "</nav></div></header>" +
       '<section class="hero" id="top"><div class="wrap">' +
         '<div class="stamp" style="color:var(--ink)"><b>' + esc(h.stamp || "N 00") + '</b><i></i><i></i><span>' + esc(h.eyebrow || "") + "</span></div>" +
-        '<h1 class="t1"><span class="over">' + esc(h.line1 || "") + (h.script ? '<span class="script">' + esc(h.script) + "</span>" : "") + "</span>" + esc(h.line2 || "") + "</h1>" +
+        '<h1 class="t1"><span class="l1">' + esc(h.line1 || "") + (h.script ? ' <span class="script">' + esc(h.script) + "</span>" : "") + '</span><span class="l2">' + esc(h.line2 || "") + "</span></h1>" +
         (h.sub ? '<p class="sub">' + md(h.sub) + "</p>" : "") +
         '<form class="jump" id="jump" autocomplete="off"><input id="jq" placeholder="Jump to… sprint 1, mobs, bugs, pipeline" aria-label="Jump to a section"><button>Go</button></form>' +
         '<div class="jump-hint" id="jh">type a word, hit enter</div>' +

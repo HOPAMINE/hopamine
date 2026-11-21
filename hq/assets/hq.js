@@ -17,8 +17,8 @@
     });
   }
   function esc(s) { return glyphs(attr(s)); }
-  // Bootzy has no · • ° » — set those marks in a fallback face (spec §1.1)
-  function glyphs(h) { return h.replace(/[·•°»]/g, function (c) { return '<span class="g">' + c + "</span>"; }); }
+  // Bootzy has no · • ° » → … × ✓ — set those marks in a fallback face (spec §1.1)
+  function glyphs(h) { return h.replace(/[·•°»→…×✓]/g, function (c) { return '<span class="g">' + c + "</span>"; }); }
   // tiny inline markup: **bold**, *italic*, `code`, [text](url)
   function md(s) {
     return esc(s)
@@ -99,13 +99,13 @@
       R.forEach(function (r, i) {
         var a = -Math.PI / 2 + (2 * Math.PI * i) / n, x = cx + rad * Math.cos(a), y = cy + rad * Math.sin(a);
         nodes += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="31" fill="#F2EFE8" stroke="#161616" stroke-width="2"/>' +
-          '<text x="' + x.toFixed(1) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="' + Math.min(9, 50 / Math.max(r.name.length, 1)).toFixed(1) + '" letter-spacing=".3">' + attr(r.name.toUpperCase()) + "</text>";
+          '<text x="' + x.toFixed(1) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="middle" font-family="Bootzy,Arial Black,sans-serif" font-weight="400" font-size="' + Math.min(9, 50 / Math.max(r.name.length, 1)).toFixed(1) + '" letter-spacing=".3">' + attr(r.name.toUpperCase()) + "</text>";
       });
       var svg = '<svg viewBox="0 0 300 300" role="img" aria-label="Roles rotate around the driver">' +
         '<circle cx="150" cy="150" r="104" fill="none" stroke="#161616" stroke-width="1.5" stroke-dasharray="3 6"/>' +
         '<circle cx="150" cy="150" r="50" fill="#5BC2E7" stroke="#161616" stroke-width="2"/>' +
-        '<text x="150" y="148" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="13" fill="#fff">' + attr((b.center || "DRIVER").toUpperCase()) + "</text>" +
-        '<text x="150" y="164" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="8.5" fill="#161616">' + attr(b.centerSub || "") + "</text>" +
+        '<text x="150" y="148" text-anchor="middle" font-family="Bootzy,Arial Black,sans-serif" font-weight="400" font-size="13" fill="#fff">' + attr((b.center || "DRIVER").toUpperCase()) + "</text>" +
+        '<text x="150" y="164" text-anchor="middle" font-family="Bootzy,Arial,sans-serif" font-weight="400" font-size="8.5" fill="#161616">' + attr(b.centerSub || "") + "</text>" +
         nodes + '</svg>';
       var items = (b.items || []).map(function (r) { return "<div><b>" + esc(r.name) + "</b><p>" + md(r.text) + "</p></div>"; }).join("");
       return '<div class="ring">' + svg + '<div class="rlist">' + items + "</div></div>";

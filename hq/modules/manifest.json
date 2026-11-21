@@ -1,0 +1,27 @@
+{
+  "version": "v1.1 · Nov 18 2026",
+  "footer": "Zima HQ · SOP + roadmap · source: Nov 18 dev sync (Granola)",
+  "hero": {
+    "stamp": "N 00",
+    "eyebrow": "Zima Network · internal",
+    "line1": "How we",
+    "script": "Build",
+    "line2": "Zima.",
+    "sub": "The operating manual and the roadmap, one module per section. Sprint 1 starts **Monday, November 23**.",
+    "meta": ["2-week sprints", "1 feature per dev", "Mobs of 3–5", "Monthly review before main", "6-month auto-prune"]
+  },
+  "modules": [
+    { "file": "01-north-star.json", "on": true },
+    { "file": "02-shipped.json", "on": true },
+    { "file": "03-team.json", "on": true },
+    { "file": "04-roadmap.json", "on": true },
+    { "file": "05-sprint-1.json", "on": true },
+    { "file": "06-sop.json", "on": true },
+    { "file": "07-mobs.json", "on": true },
+    { "file": "08-testers-git.json", "on": true },
+    { "file": "09-pipeline.json", "on": true },
+    { "file": "10-design.json", "on": true },
+    { "file": "11-actions.json", "on": true },
+    { "file": "12-later.json", "on": true }
+  ]
+}

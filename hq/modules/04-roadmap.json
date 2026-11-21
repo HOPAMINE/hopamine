@@ -1,0 +1,55 @@
+{
+  "id": "roadmap",
+  "nav": "Roadmap",
+  "stamp": "N 04",
+  "eyebrow": "Nov 18 → Jan 31 · four tracks · swipe each lane",
+  "title": "The",
+  "script": "Roadmap",
+  "ground": "blue",
+  "keywords": ["roadmap", "timeline", "sprints", "dates", "plan", "tracks", "schedule"],
+  "lede": "One calendar, four tracks: the product, this HQ and its pipeline, the builder application, and the concept lab. Two-week sprints for everything. Dates after Sprint 2 are proposed and get confirmed at each review call.",
+  "blocks": [
+    { "type": "tracks", "tracks": [
+      {
+        "name": "A · Zima product",
+        "repo": "HOPAMINE/hopamine → zima.hopamine.xyz · dev leads Vishav + Jonathan",
+        "phases": [
+          { "when": "Nov 18 – 22", "name": "Sprint 0 · Setup", "flag": "This week", "goal": "People, sheet and board ready so Sprint 1 starts clean.", "items": ["Share Granola notes + HQ link", "Contributor sheet live (skills, lane, hours/week, timezone, Discord)", "GitHub Project board + labels", "Discord **Tester** role, testers channel, bug form"], "progress": 20 },
+          { "when": "Mon Nov 23 – Sun Dec 6", "name": "Sprint 1 · Search & map feel", "flag": "Sprint 1", "now": true, "goal": "Search → map → person feels like travelling into a world.", "items": ["Free-drag the globe + click a spot", "Zoom/travel animation when search completes", "Backload test data: profiles, projects, orgs", "Search relevance pass", "Fix every P0"], "progress": 0 },
+          { "when": "Mon Dec 7 – Sun Dec 20", "name": "Sprint 2 · Tester loop", "goal": "Small Discord tester group stress-tests chat + search.", "items": ["Invite tester cohort", "Triage → GitHub issues → assign", "Auto-prune projects after ~6 months idle", "Start heat-map dots", "**Monthly review call** (week of Dec 14)"] },
+          { "when": "Dec 21 – Jan 3", "name": "Holiday buffer", "goal": "Optional. Bugs and small fixes only.", "items": ["P0/P1 from tester reports", "Docs + onboarding polish"] },
+          { "when": "Jan 4 – 17", "name": "Sprint 3 · The map fills in", "flag": "Proposed", "goal": "Visual system for scale and identity.", "items": ["Heat-map dots", "Uniform avatars + archetype badges", "Orgs on the map", "**Review call** (week of Jan 11)"] },
+          { "when": "Jan 18 – 31", "name": "Sprint 4 · Zima speaks", "flag": "Proposed", "goal": "First version of the assistant in your ear.", "items": ["Zima bot: \"I want to help on something\" → matching projects", "Resources + events attached to results", "Second tester round"] }
+        ]
+      },
+      {
+        "name": "B · Zima HQ + pipeline",
+        "repo": "HOPAMINE/hopamine hq/ (this site) · owner Mawuli",
+        "phases": [
+          { "when": "Nov 18 – 22", "name": "HQ v1", "flag": "This week", "now": true, "goal": "This site: modular, local deploy with live reload, first internal deploy.", "items": ["Modules + manifest on/off switches", "`npm run dev` local server", "Internal Vercel deploy (team-only)", "Prompt for the Zima Claude project"], "progress": 70 },
+          { "when": "Sprint 1", "name": "Git pipeline", "goal": "Every branch gets its own shareable preview link.", "items": ["HQ lands in HOPAMINE/hopamine hq/", "Vercel project zima-hq connected (Root Directory hq)", "Branch previews + production on main", "Give the team Vercel access or share links", "Consolidate the 5 duplicate *zima* Vercel projects"] },
+          { "when": "Sprint 2", "name": "Team-owned modules", "goal": "Dev leads update HQ at each kickoff.", "items": ["Roadmap + board modules updated by dev leads", "Contributor sheet feeds the team module", "`npm run check` runs on every preview"] },
+          { "when": "Sprint 3", "name": "Live data", "flag": "Proposed", "items": ["GitHub issues → Sprint board module", "Deploy status per track"] },
+          { "when": "Sprint 4", "name": "Agent control room", "flag": "Proposed", "items": ["PM agent proposes module updates as PRs", "Team Manager agent drafts kickoff + TLDR posts"] }
+        ]
+      },
+      {
+        "name": "C · Builder application + intake",
+        "repo": "Claude artifact → own deploy · owner Mawuli, intake Vishav",
+        "phases": [
+          { "when": "Nov 18 – 22", "name": "Refine", "flag": "This week", "now": true, "items": ["Visual design cues", "Time budgeting + extra skill sets", "Interchangeable \"What you'd build\" list", "Progress bars + FE/BE tags"] },
+          { "when": "Sprint 1", "name": "Wire it up", "items": ["Backend database for applications", "Google Sheet for allocation by time budget", "Open problems read from the same source as the HQ board"] },
+          { "when": "Sprint 2", "name": "First cohort", "items": ["Intake calls", "Agreements signed", "Vault access + first scoped PRs in mobs"] }
+        ]
+      },
+      {
+        "name": "D · Concept lab",
+        "repo": "HOPAMINE/ZIMA demo/ + Mawuli-mp4/zima",
+        "phases": [
+          { "when": "Ongoing", "name": "Prototype first", "goal": "Try ideas cheaply here before they go into the product.", "items": ["Globe drag + zoom prototypes", "Heat-map dot experiments", "Archives / directory concepts"] },
+          { "when": "Sprint 1", "name": "One source", "items": ["Reconcile HOPAMINE/ZIMA and Mawuli-mp4/zima (both moved since last sync)", "Archive the demo repo once product catches up"] }
+        ]
+      }
+    ]}
+  ]
+}

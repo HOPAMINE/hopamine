@@ -1,0 +1,22 @@
+{
+  "id": "sprint-1",
+  "nav": "Sprint 1",
+  "stamp": "N 05",
+  "eyebrow": "Mon Nov 23 – Sun Dec 6",
+  "title": "Sprint 1",
+  "script": "Board",
+  "ground": "cream",
+  "keywords": ["sprint 1", "board", "features", "drag", "globe", "click", "zoom", "animation", "test data", "search", "relevance"],
+  "lede": "Owners are suggestions until the contributor sheet confirms hours. Dashed tag = proposed owner.",
+  "blocks": [
+    { "type": "board", "items": [
+      { "id": "S1·1", "title": "Free-drag the globe, click a spot", "text": "Use the CLI or just grab the planet, spin it and click anywhere to see what's happening there. Raised by Mawuli; Andrea had the same idea.", "tags": [{ "t": "Frontend", "k": "fe" }, { "t": "P1 · core", "k": "p1" }, { "t": "Jonathan", "k": "prop" }], "done": ["Drag/rotate works on desktop and touch without fighting the search UI", "Click on land opens nearby builders, projects and orgs for that area", "Clustered markers and the chat dock still work"] },
+      { "id": "S1·2", "title": "Search-complete zoom animation", "text": "When a search resolves, the camera travels into the zone. \"Now we're emerging into the world.\"", "tags": [{ "t": "Frontend", "k": "fe" }, { "t": "P1 · core", "k": "p1" }, { "t": "Jonathan", "k": "prop" }], "done": ["Eased fly-to on results; respects reduced-motion", "Works for city, region and multi-city results", "Never blocks typing a new query"] },
+      { "id": "S1·3", "title": "Backload test data", "text": "Seed realistic profiles, projects and orgs across cities so search and chat can be stress-tested before testers arrive.", "tags": [{ "t": "Backend", "k": "be" }, { "t": "P1 · core", "k": "p1" }, { "t": "Vishav", "k": "prop" }], "done": ["Seed script in the repo, idempotent, flagged as test data", "One command wipes test data before launch", "Never touches production user records"] },
+      { "id": "S1·4", "title": "Search relevance pass", "text": "Query → people, projects, orgs and resources in the geographic range, ranked by fit. The garden-automation dev finds the hydroponics botanist.", "tags": [{ "t": "Backend", "k": "be" }, { "t": "Frontend", "k": "fe" }, { "t": "P1 · core", "k": "p1" }, { "t": "Vishav + 1", "k": "prop" }], "done": ["10 written test queries with expected top results, all passing", "Results show why they matched (skills, bio, project)"] },
+      { "id": "S1·5", "title": "Tester program setup", "text": "Discord Tester role, a testers channel, and a bug form (screenshot + steps to reproduce) that feeds GitHub triage.", "tags": [{ "t": "Ops", "k": "ops" }, { "t": "P1", "k": "p1" }, { "t": "Andrea", "k": "prop" }] },
+      { "id": "S1·6", "title": "HQ pipeline live", "text": "HQ in HOPAMINE/hopamine `hq/`, connected to Vercel, branch previews working, team can open the links.", "tags": [{ "t": "Ops", "k": "ops" }, { "t": "P1", "k": "p1" }, { "t": "Mawuli", "k": "own" }] },
+      { "id": "S1·7", "title": "Bug budget", "text": "Every P0 found in internal testing gets fixed before new feature work merges. Easy P2s get picked up with spare hours.", "tags": [{ "t": "P0 first", "k": "p0" }, { "t": "Everyone", "k": "own" }] }
+    ]}
+  ]
+}

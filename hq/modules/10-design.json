@@ -1,0 +1,31 @@
+{
+  "id": "design",
+  "nav": "Design",
+  "stamp": "N 10",
+  "eyebrow": "So we all build in the same direction",
+  "title": "Design",
+  "script": "Direction",
+  "ground": "cream",
+  "keywords": ["design", "visual", "references", "style", "color", "colour", "font", "hex", "beehive", "ux", "bounce", "hopamine"],
+  "lede": "Two layers. Team and recruiting material (this HQ, the builder application) uses the Hopamine visual language. The product itself follows the live site. A visual synopsis and inspiration board is on Mawuli's list.",
+  "blocks": [
+    { "type": "swatches", "title": "Hopamine wheel · blue in every colourway", "items": [
+      { "name": "Blue", "hex": "#5BC2E7", "job": "main brand" },
+      { "name": "Cobalt", "hex": "#115F9C", "ink": "#fff", "job": "ground" },
+      { "name": "Pink", "hex": "#E849BE", "ink": "#fff", "job": "accent · cursive" },
+      { "name": "Lime", "hex": "#B2D651", "job": "ground" },
+      { "name": "Green", "hex": "#3E8E5A", "ink": "#fff", "job": "action · numerals" },
+      { "name": "Ink", "hex": "#161616", "ink": "#fff", "job": "ground · type" },
+      { "name": "Cream", "hex": "#F2EFE8", "job": "ground" }
+    ]},
+    { "type": "panels", "items": [
+      { "fill": "white", "title": "Type", "text": "Bootzy caps for display (−5.5%), Grotalism Black caps-only (−9%), Glamour for the cursive overlay. **No Google Fonts.** Drop the licensed files in `assets/fonts/`; until then HQ falls back to system faces." },
+      { "fill": "blue", "title": "Product (live site)", "text": "White ground, electric blue #00A6F3, map first, hexagons and the beehive feeling. The globe is the product." },
+      { "fill": "ink", "title": "Accent discipline", "text": "Pink marks the cursive and the stamp dots. Green marks what you can click or count. Nothing else." }
+    ]},
+    { "type": "dosdonts",
+      "do": ["Map first. The globe is the product.", "Show human scale: density, glow, volume of people and projects.", "Motion that feels like travelling into a place.", "Let the user drive (CLI) and let Zima meet them halfway."],
+      "dont": ["Dense dashboards at first glance (bounce-rate killer).", "GeoRemedy-level data on the front of the site.", "Feed-style, text-only, channel-by-channel layouts. Discord already does that.", "Dead projects cluttering the map (auto-prune)."]
+    }
+  ]
+}

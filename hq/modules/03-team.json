@@ -1,0 +1,27 @@
+{
+  "id": "team",
+  "nav": "Team",
+  "stamp": "N 03",
+  "eyebrow": "Who holds what",
+  "title": "Team &",
+  "script": "Lanes",
+  "ground": "cream",
+  "keywords": ["team", "roles", "people", "owners", "director", "dev lead", "mawuli", "vishav", "jonathan", "andrea", "laura", "sam"],
+  "lede": "Lanes are where someone leads by default. Anyone can join a mob in any lane.",
+  "blocks": [
+    { "type": "team", "people": [
+      { "name": "Mawuli", "role": "Project Director", "kind": "dir", "owns": "The vision, priorities and roadmap sign-off. Re-articulates goals and needs so the team always knows the end product; trusts the builders on the how. Final say at review calls." },
+      { "name": "Vishav", "role": "Dev Lead", "kind": "lead", "owns": "Backend and data, contributor intake (15–20 min calls), the contributor sheet, sprint planning with Jonathan, merges to main." },
+      { "name": "Jonathan", "role": "Dev Lead", "kind": "lead", "owns": "Frontend, globe interaction and motion (the hex load is his), code review, sprint planning with Vishav." },
+      { "name": "Andrea", "role": "UI/UX · QA", "owns": "Full-stack + UI/UX (London). Tester program, bug triage flow, usability. The prioritization method in this SOP is hers." },
+      { "name": "Laura", "role": "Visual design", "owns": "UI and visual feel: turning the convention-hall feeling into the interface." },
+      { "name": "Sam", "role": "Performance", "owns": "Map and marker performance." },
+      { "name": "New devs", "role": "From the server", "owns": "Join through the builder application, then get an open problem sized to their weekly hours." }
+    ]},
+    { "type": "panels", "title": "Decision rights · proposed", "items": [
+      { "fill": "white", "title": "Project Director decides", "text": "What we build and why, sprint themes, what ships at the review call." },
+      { "fill": "blue", "title": "Dev leads decide", "text": "How it's built: architecture, who's in which mob, code review standards, merge order." },
+      { "fill": "lime", "title": "Mobs decide", "text": "Everything inside their feature, within the done-when criteria." }
+    ]}
+  ]
+}

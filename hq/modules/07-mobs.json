@@ -1,0 +1,24 @@
+{
+  "id": "mobs",
+  "nav": "Mobs",
+  "stamp": "N 07",
+  "eyebrow": "Joe Justice method",
+  "title": "Working in",
+  "script": "Mobs",
+  "ground": "ink",
+  "keywords": ["mob", "joe justice", "roles", "driver", "rotate", "small teams", "toyota", "spacex", "tesla"],
+  "lede": "From Joe Justice's study of Toyota, SpaceX and Tesla: a top-of-day breakdown with the whole group, then small mobs of 3–5 working on the same thing at once. Ideas that don't make the final build still add stimulus and flow.",
+  "blocks": [
+    { "type": "ring", "center": "Driver", "centerSub": "hands on keys",
+      "roles": [{ "name": "Scribe" }, { "name": "Challenger" }, { "name": "Relay" }, { "name": "Pipeline" }, { "name": "Next up" }],
+      "items": [
+        { "name": "Driver", "text": "Live prototyping and iterating: writing the code, shaping the component." },
+        { "name": "Scribe", "text": "Annotates the design process and the reasoning so every decision lives in the PR." },
+        { "name": "Challenger", "text": "Hunts for flaws in the design and proposes iterations on the iteration." },
+        { "name": "Relay", "text": "Holds the overview and keeps the other mobs and the dev leads in the loop." },
+        { "name": "Pipeline", "text": "Keeps the \"3D printer\" running: builds, previews, test data, environment." },
+        { "name": "Rotate", "text": "When the driver runs out of steam or flow, the next person takes the keys. Remote mobs share screen and pass the branch." }
+      ]
+    }
+  ]
+}

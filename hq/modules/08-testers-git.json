@@ -1,0 +1,28 @@
+{
+  "id": "testers",
+  "nav": "Bugs + git",
+  "stamp": "N 08",
+  "eyebrow": "From report to merge",
+  "title": "Testers, bugs &",
+  "script": "Git",
+  "ground": "cream",
+  "keywords": ["bugs", "testers", "triage", "github", "issues", "report", "template", "git", "branch", "pr", "merge", "join", "application", "onboarding"],
+  "lede": "The loop: backload test data → invite a small tester group from Discord → they stress-test chat and search → reports → triage → fix → next round.",
+  "blocks": [
+    { "type": "panels", "items": [
+      { "fill": "white", "title": "Tester program", "text": "Selected Discord members get a **Tester** role and a private testers channel to discuss and ask questions. Group size is set by the dev leads per round. Testers file bugs with the template below." },
+      { "fill": "blue", "title": "Triage", "text": "Each report becomes a GitHub issue with a priority (P0–P3), an area (globe, search, chat, profile, projects, onboarding) and a lane (frontend / backend), then goes to whoever has hours. Major bugs first." }
+    ]},
+    { "type": "code", "items": [
+      { "lines": "# Bug report — paste in the testers channel\nWhat happened:\nWhat you expected:\nSteps to reproduce:\n  1.\n  2.\n  3.\nScreenshot / screen recording: (attach)\nPage URL:\nDevice + browser:\nHow bad? blocks me / annoying / cosmetic" },
+      { "lines": "# Git flow — HOPAMINE/hopamine\ngit checkout main && git pull\ngit checkout -b feat/globe-drag     # or fix/chat-scroll\n# commit small, push daily\ngit push -u origin feat/globe-drag\n# open a draft PR on day 1, link the issue\n# Vercel builds a preview link per branch\n# review → approved at review call → merge\n# never push straight to main" }
+    ]},
+    { "type": "steps", "title": "Joining the team", "items": [
+      { "title": "Apply · ~10 min", "text": "Name, email, city, Discord handle, lane, languages and tools, years building, hours per week, best project link, and one open problem with a rough plan." },
+      { "title": "Short call", "text": "15–20 minutes with Vishav about their work and where they'd fit." },
+      { "title": "Sign the agreement", "text": "Confidentiality, IP assignment, non-compete, confirmation the work is unpaid. Signed before any access." },
+      { "title": "Dev access", "text": "Repo access and development keys through a shared password vault. Nobody touches production data." },
+      { "title": "First PR", "text": "A scoped starter task inside a mob, reviewed before it merges to main." }
+    ]}
+  ]
+}

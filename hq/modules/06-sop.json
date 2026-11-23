@@ -1,0 +1,35 @@
+{
+  "id": "sop",
+  "nav": "SOP",
+  "stamp": "N 06",
+  "eyebrow": "Standard operating procedure",
+  "title": "How work",
+  "script": "Moves",
+  "ground": "lime",
+  "keywords": ["sop", "process", "priority", "ladder", "cadence", "rituals", "definition of done", "standup", "review"],
+  "lede": "Balance bugs, critical features and nice-to-haves, with feedback loops running through all of it.",
+  "blocks": [
+    { "type": "ladder", "title": "The priority ladder", "items": [
+      { "p": "P0", "title": "Major bugs", "text": "Anything that disrupts how people use the site. Fixed first, before anything merges." },
+      { "p": "P1", "title": "Critical features", "text": "What the site needs to do what people come to do: search, map, profiles, connect." },
+      { "p": "P2", "title": "Minor bugs and easy fixes", "text": "Picked up when a dev has spare hours in the sprint." },
+      { "p": "P3", "title": "Nice-to-haves", "text": "Logged in the backlog. Never displace P0–P1." }
+    ]},
+    { "type": "steps", "title": "The two-week cycle", "items": [
+      { "title": "Kickoff · Day 1 (Monday)", "text": "Dev leads break down the sprint theme, read everyone's hours from the contributor sheet, and assign one feature per dev or mob, sized to fit two weeks." },
+      { "title": "Mobs form", "text": "Small teams of 3–5 per feature. Each mob opens a branch and a draft PR on day one, which gives it a preview link straight away." },
+      { "title": "Updates · daily or weekly", "text": "Async in Discord: shipped / next / blocked, plus a screenshot or clip. Weekly minimum, daily when a mob is active." },
+      { "title": "Mid-sprint check · Day 7", "text": "Anything at risk? Cut scope early. Re-shuffle bug fixes to whoever has hours." },
+      { "title": "Demo + retro · Day 14", "text": "Each mob shows what works on its preview link. Keep / change in the process." },
+      { "title": "Monthly review call", "text": "The Project Director and dev leads approve, reject or send back the month's work. Only approved work is pushed to main." }
+    ]},
+    { "type": "cards", "title": "Definition of done", "items": [
+      { "num": "01", "text": "Works on desktop and mobile, on a Vercel preview link." },
+      { "num": "02", "text": "PR reviewed by someone outside the mob, with a short step-by-step review list (HUMAN_REVIEW.md style)." },
+      { "num": "03", "text": "No new P0s; lint and checks pass." },
+      { "num": "04", "text": "Tagged frontend / backend; board and HQ updated." },
+      { "num": "05", "text": "Before/after screenshot or clip posted in the update." },
+      { "num": "06", "text": "Approved at the review call before it lands on main." }
+    ]}
+  ]
+}

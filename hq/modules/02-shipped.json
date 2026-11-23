@@ -1,0 +1,21 @@
+{
+  "id": "shipped",
+  "nav": "Live now",
+  "stamp": "N 02",
+  "eyebrow": "zima.hopamine.xyz · HOPAMINE/hopamine",
+  "title": "Already",
+  "script": "Live",
+  "ground": "ink",
+  "keywords": ["shipped", "v1", "built", "live", "stack"],
+  "lede": "The baseline we iterate on. Stack: Next.js 16, Convex, Clerk, MapLibre globe, Tailwind v4, Framer Motion.",
+  "blocks": [
+    { "type": "cards", "items": [
+      { "who": "Jonathan", "title": "Hex login transition", "text": "The beehive hexagon animation on sign-in, sign-up and onboarding." },
+      { "who": "Vishav", "title": "Globe + city search", "text": "Clustered builders on the globe, city search and filters." },
+      { "who": "Vishav", "title": "Live messaging", "text": "Chat dock with inbox, threads and optimistic send." },
+      { "who": "Vishav", "title": "Add a project", "text": "Project onboarding from the profile menu. The plant icon is projects." },
+      { "who": "Vishav", "title": "Events spotlight", "text": "Calendar/spotlight icon for events, plus the NYC Climate Week makeathon banner." },
+      { "who": "Sam", "title": "Marker performance", "text": "Map marker avatars served through direct Clerk CDN variants (PR #15)." }
+    ]}
+  ]
+}

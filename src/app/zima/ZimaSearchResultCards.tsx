@@ -10,6 +10,8 @@ type Props = {
   loadingResults?: boolean;
   errorMessage?: string | null;
   cityLabel?: string;
+  loadingLabel?: string | null;
+  emptyLabel?: string | null;
   selectedResultId?: string | null;
   onSelectResult?: (id: string) => void;
   /** Desktop left bar: two builders per row. */
@@ -21,6 +23,8 @@ export function ZimaSearchResultCards({
   loadingResults = false,
   errorMessage = null,
   cityLabel = "New York City",
+  loadingLabel = null,
+  emptyLabel = null,
   selectedResultId,
   onSelectResult,
   columns = 1,
@@ -32,12 +36,12 @@ export function ZimaSearchResultCards({
     return <p className={`${statusClass} text-red-600`}>{errorMessage}</p>;
   }
   if (loadingResults && results.length === 0) {
-    return <p className={statusClass}>Searching {cityLabel}…</p>;
+    return <p className={statusClass}>{loadingLabel ?? `Searching ${cityLabel}…`}</p>;
   }
   if (results.length === 0) {
     return (
       <p className={statusClass}>
-        No builders match yet. Try fewer filters or different words.
+        {emptyLabel ?? `No builders in ${cityLabel} yet.`}
       </p>
     );
   }

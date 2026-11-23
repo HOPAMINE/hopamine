@@ -6,7 +6,6 @@ import {
   findSearchResultById,
   type ZimaSearchResult,
 } from "@/lib/zima/searchResults";
-import { zimaSearchCityById } from "../../../shared/zimaSearchCities";
 import { ZimaSearchHeader } from "./ZimaSearchHeader";
 import { ZimaSearchProfilePanel } from "./ZimaSearchProfilePanel";
 import { ZimaSearchResultCards } from "./ZimaSearchResultCards";
@@ -31,7 +30,7 @@ export function ZimaSearchDesktop({ chat, search, profiles, onFirstSend }: Props
 
   useEffect(() => {
     setSelectedResultId(null);
-  }, [search.filters.city]);
+  }, [search.place.label, search.place.lng, search.place.lat]);
 
   return (
     <div className="hidden h-dvh flex-col overflow-hidden bg-white md:flex">
@@ -53,7 +52,9 @@ export function ZimaSearchDesktop({ chat, search, profiles, onFirstSend }: Props
               results={search.results}
               loadingResults={search.loadingResults}
               errorMessage={search.error}
-              cityLabel={zimaSearchCityById(search.filters.city).label}
+              cityLabel={search.place.label}
+              loadingLabel={search.loadingLabel}
+              emptyLabel={search.emptyLabel}
               selectedResultId={selectedResultId}
               onSelectResult={setSelectedResultId}
             />
@@ -66,7 +67,12 @@ export function ZimaSearchDesktop({ chat, search, profiles, onFirstSend }: Props
         >
           <ZimaSearchMap
             showPins
-            cityId={search.filters.city}
+            cityId={search.place.cityId}
+            focus={
+              search.place.cityId
+                ? null
+                : { lng: search.place.lng, lat: search.place.lat }
+            }
             directory={profiles}
             layoutKey="desktop-results"
             className="absolute inset-0"

@@ -23,7 +23,7 @@ export function ZimaShell({
   profiles,
 }: ZimaShellProps) {
   const chat = useZimaChat(isChatMode, { resultsOnly: true });
-  const search = useZimaSearch(chat);
+  const search = useZimaSearch(chat, profiles);
   const isMdUp = useIsMdUp();
   const enterChat = () => onChatModeChange(true);
 

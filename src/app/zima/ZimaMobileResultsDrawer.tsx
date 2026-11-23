@@ -19,6 +19,9 @@ type Props = {
   loadingResults?: boolean;
   errorMessage?: string | null;
   cityLabel?: string;
+  loadingLabel?: string | null;
+  emptyLabel?: string | null;
+  summaryLabel?: string | null;
   selectedResultId?: string | null;
   onSelectResult: (id: string) => void;
 };
@@ -83,6 +86,9 @@ export function ZimaMobileResultsDrawer({
   loadingResults = false,
   errorMessage = null,
   cityLabel = "New York City",
+  loadingLabel = null,
+  emptyLabel = null,
+  summaryLabel = null,
   selectedResultId,
   onSelectResult,
 }: Props) {
@@ -165,7 +171,7 @@ export function ZimaMobileResultsDrawer({
           <h2
             className={`${jetbrainsMono.className} w-full text-center text-[13px] font-semibold uppercase tracking-[0.12em] text-neutral-900`}
           >
-            {foundBuildersLabel(count, loadingResults, cityLabel)}
+            {summaryLabel ?? foundBuildersLabel(count, loadingResults, cityLabel)}
           </h2>
         </div>
         <div
@@ -176,6 +182,8 @@ export function ZimaMobileResultsDrawer({
             loadingResults={loadingResults}
             errorMessage={errorMessage}
             cityLabel={cityLabel}
+            loadingLabel={loadingLabel}
+            emptyLabel={emptyLabel}
             selectedResultId={selectedResultId}
             onSelectResult={onSelectResult}
           />

@@ -25,6 +25,15 @@ function cityView(cityId: ZimaSearchCityId): GlobeView {
   };
 }
 
+function focusView(focus: { lng: number; lat: number }): GlobeView {
+  return {
+    center: [focus.lng, focus.lat],
+    zoom: NYC_REGION_VIEW.zoom,
+    pitch: 0,
+    bearing: 0,
+  };
+}
+
 /** Moves the camera when the search city changes. The first frame is initialView. */
 function SyncMapView({ view }: { view: GlobeView }) {
   const map = useMap();
@@ -51,7 +60,10 @@ function SyncMapView({ view }: { view: GlobeView }) {
 type Props = {
   /** Every placed Hopamine user, drawn as avatar cards. */
   directory: ZimaSearchResult[];
-  cityId?: ZimaSearchCityId;
+  /** Built-in search city. Omit when `focus` is a city outside that list. */
+  cityId?: ZimaSearchCityId | null;
+  /** Camera target for a looked-up city that has no built-in id. An empty city stays here. */
+  focus?: { lng: number; lat: number } | null;
   /** When false, cards stay visible but don't open a profile. */
   showPins?: boolean;
   className?: string;
@@ -64,14 +76,23 @@ type Props = {
 /** Hopamine map starting on NYC; pan and zoom freely. Fills its wrapper like the home globe. */
 export default function ZimaSearchMap({
   directory,
-  cityId = "new-york-city",
+  cityId = null,
+  focus = null,
   showPins = false,
   className = "absolute inset-0 overflow-hidden",
   layoutKey,
   selectedResultId = null,
   onSelectResult,
 }: Props) {
-  const view = useMemo(() => cityView(cityId), [cityId]);
+  const focusLng = focus?.lng;
+  const focusLat = focus?.lat;
+  const view = useMemo(() => {
+    if (cityId) return cityView(cityId);
+    if (focusLng !== undefined && focusLat !== undefined) {
+      return focusView({ lng: focusLng, lat: focusLat });
+    }
+    return cityView("new-york-city");
+  }, [cityId, focusLng, focusLat]);
   const { mapLayers } = useZimaSearchChrome();
 
   return (

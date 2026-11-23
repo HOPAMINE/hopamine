@@ -10,7 +10,7 @@ type CitiesModule = { default: WorldCity[] };
 
 let citiesPromise: Promise<WorldCity[]> | null = null;
 
-function loadWorldCities(): Promise<WorldCity[]> {
+export function loadWorldCities(): Promise<WorldCity[]> {
   if (!citiesPromise) {
     citiesPromise = import("../../../shared/worldCities50k.json").then(
       (mod: CitiesModule) => mod.default,

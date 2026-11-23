@@ -80,3 +80,35 @@ export function bestCityExactMatch(
   }
   return best;
 }
+
+/**
+ * A city named in free text. The whole string wins first ("Tokyo"), then the
+ * longest whole-word mention ("builders in Tokyo" → Tokyo, and "New York"
+ * beats "York").
+ */
+export function findMentionedCity(
+  cities: readonly WorldCity[],
+  rawText: string,
+): WorldCity | null {
+  const exact = bestCityExactMatch(cities, rawText);
+  if (exact) return exact;
+
+  const folded = foldCityName(rawText);
+  if (!folded) return null;
+  const padded = ` ${folded} `;
+
+  let best: WorldCity | null = null;
+  for (const city of cities) {
+    if (city.folded.length < 4) continue;
+    if (!padded.includes(` ${city.folded} `)) continue;
+    if (
+      !best ||
+      city.folded.length > best.folded.length ||
+      (city.folded.length === best.folded.length &&
+        city.population > best.population)
+    ) {
+      best = city;
+    }
+  }
+  return best;
+}

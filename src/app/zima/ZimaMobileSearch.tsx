@@ -6,7 +6,6 @@ import {
   findSearchResultById,
   type ZimaSearchResult,
 } from "@/lib/zima/searchResults";
-import { zimaSearchCityById } from "../../../shared/zimaSearchCities";
 import { ZimaComposerFields } from "./ZimaComposerFields";
 import { ZimaMobileResultsDrawer } from "./ZimaMobileResultsDrawer";
 import { ZimaSearchProfilePanel } from "./ZimaSearchProfilePanel";
@@ -37,7 +36,7 @@ export function ZimaMobileSearch({
 
   useEffect(() => {
     setSelectedResultId(null);
-  }, [search.filters.city]);
+  }, [search.place.label, search.place.lng, search.place.lat]);
 
   return (
     <div className="relative z-10 flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
@@ -58,7 +57,12 @@ export function ZimaMobileSearch({
       <main className="relative min-h-0 flex-1 overflow-hidden">
         <ZimaSearchMap
           showPins={hasSearchResults}
-          cityId={search.filters.city}
+          cityId={search.place.cityId}
+          focus={
+            search.place.cityId
+              ? null
+              : { lng: search.place.lng, lat: search.place.lat }
+          }
           directory={profiles}
           layoutKey="mobile-results"
           className="absolute inset-0 z-0 overflow-hidden"
@@ -78,7 +82,10 @@ export function ZimaMobileSearch({
             results={search.results}
             loadingResults={search.loadingResults}
             errorMessage={search.error}
-            cityLabel={zimaSearchCityById(search.filters.city).label}
+            cityLabel={search.place.label}
+            loadingLabel={search.loadingLabel}
+            emptyLabel={search.emptyLabel}
+            summaryLabel={search.summaryLabel}
             selectedResultId={selectedResultId}
             onSelectResult={setSelectedResultId}
           />

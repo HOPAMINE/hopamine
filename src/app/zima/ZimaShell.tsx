@@ -3,7 +3,6 @@
 import type { ZimaSearchResult } from "@/lib/zima/searchResults";
 import { newsreader } from "../../../fonts";
 import { ZimaComposer } from "./ZimaComposer";
-import { ZimaMakeathonBanner } from "./ZimaMakeathonBanner";
 import { ZimaMobileSearch } from "./ZimaMobileSearch";
 import { ZimaSearchDesktop } from "./ZimaSearchDesktop";
 import { ZIMA_LANDING_SEARCH_WIDTH } from "./ZimaSearchHeader";
@@ -92,13 +91,6 @@ export function ZimaShell({
               chat={chat}
               search={search}
             />
-          </div>
-        </div>
-        <div className="flex w-full justify-center px-6">
-          <div className={`w-full ${ZIMA_LANDING_SEARCH_WIDTH}`}>
-            <div className="mx-auto w-[75%]">
-              <ZimaMakeathonBanner />
-            </div>
           </div>
         </div>
       </div>

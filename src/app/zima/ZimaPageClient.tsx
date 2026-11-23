@@ -25,7 +25,7 @@ export function ZimaPageClient() {
       {!isChatMode ? (
         <ZimaGlobeBackdrop
           extendUnderTopChrome
-          className="pointer-events-none z-0 bg-white"
+          className="z-0 bg-white"
         >
           {mapLayers.people ? <GlobePeople profiles={profiles} /> : null}
           {mapLayers.projects ? <GlobeProjects /> : null}

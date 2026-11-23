@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { GeoJSONSource } from "maplibre-gl";
+import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 import { toMapResult, type ZimaSearchResult } from "@/lib/zima/searchResults";
 import { searchCityIdForLocation } from "../../../shared/zimaSearchCities";
+import { easeToPlace } from "./camera";
 import { useMap } from "./Globe";
 import ResultMarkers, { type MarkerInput } from "./ResultMarkers";
 import { HOPAMINE_BLUE } from "./globePalettes";
-import { NYC_MIN_ZOOM } from "./nycRegion";
+import { NYC_MAX_ZOOM, NYC_MIN_ZOOM, NYC_REGION_VIEW } from "./nycRegion";
 
 const SOURCE_ID = "zima-people";
 const CLUSTER_LAYER_ID = "zima-people-clusters";
 const COUNT_LAYER_ID = "zima-people-counts";
 const POINT_LAYER_ID = "zima-people-points";
+/** Matches `clusterMaxZoom` on the source. Past this, a blob is one city. */
+const CLUSTER_MAX_ZOOM = 8;
 
 /** Faces shown per city while the whole globe is in frame. Zooming in reveals everyone. */
 const WORLD_CARDS_PER_PLACE = 6;
@@ -151,11 +154,74 @@ export function GlobePeople({
     // Cards already cover people after search — skip cluster dots.
     if (alwaysShowCards) return;
 
+    const container = map.getCanvasContainer();
+    let cancelled = false;
+
+    const showPointer = () => {
+      container.style.cursor = "pointer";
+    };
+    const hidePointer = () => {
+      container.style.cursor = "";
+    };
+
+    const centerOf = (event: MapLayerMouseEvent): [number, number] | null => {
+      const geometry = event.features?.[0]?.geometry;
+      if (!geometry || geometry.type !== "Point") return null;
+      const [lng, lat] = geometry.coordinates;
+      return [lng, lat];
+    };
+
+    // A regional blob steps in until it splits. Once the blob is a single
+    // city, the same click finishes the dive and the faces replace the dot.
+    const onClusterClick = (event: MapLayerMouseEvent) => {
+      const center = centerOf(event);
+      const clusterId = Number(event.features?.[0]?.properties?.cluster_id);
+      if (!center || !Number.isFinite(clusterId)) return;
+      const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
+      if (!source) return;
+      void source.getClusterExpansionZoom(clusterId).then((expansion) => {
+        if (cancelled) return;
+        const stepped = Math.max(expansion, map.getZoom() + 2.2);
+        easeToPlace(
+          map,
+          center,
+          stepped > CLUSTER_MAX_ZOOM
+            ? Math.max(stepped, NYC_REGION_VIEW.zoom)
+            : stepped,
+          NYC_MAX_ZOOM,
+        );
+      });
+    };
+
+    const onPointClick = (event: MapLayerMouseEvent) => {
+      const center = centerOf(event);
+      if (!center) return;
+      easeToPlace(
+        map,
+        center,
+        Math.max(NYC_REGION_VIEW.zoom, map.getZoom() + 1.4),
+        NYC_MAX_ZOOM,
+      );
+    };
+
+    let listening = false;
+    const listen = () => {
+      if (listening || !map.getLayer(CLUSTER_LAYER_ID)) return;
+      listening = true;
+      map.on("click", CLUSTER_LAYER_ID, onClusterClick);
+      map.on("click", POINT_LAYER_ID, onPointClick);
+      map.on("mouseenter", CLUSTER_LAYER_ID, showPointer);
+      map.on("mouseenter", POINT_LAYER_ID, showPointer);
+      map.on("mouseleave", CLUSTER_LAYER_ID, hidePointer);
+      map.on("mouseleave", POINT_LAYER_ID, hidePointer);
+    };
+
     const sync = () => {
       if (!map.isStyleLoaded()) return;
       const existing = map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
       if (existing) {
         existing.setData(data);
+        listen();
         return;
       }
 
@@ -164,7 +230,7 @@ export function GlobePeople({
         data,
         cluster: true,
         clusterRadius: 48,
-        clusterMaxZoom: 8,
+        clusterMaxZoom: CLUSTER_MAX_ZOOM,
       });
       map.addLayer({
         id: CLUSTER_LAYER_ID,
@@ -228,12 +294,23 @@ export function GlobePeople({
           "circle-stroke-opacity": ["step", ["zoom"], 1, NYC_MIN_ZOOM, 0],
         },
       });
+      listen();
     };
 
     sync();
     map.on("load", sync);
     return () => {
+      cancelled = true;
       map.off("load", sync);
+      if (listening) {
+        map.off("click", CLUSTER_LAYER_ID, onClusterClick);
+        map.off("click", POINT_LAYER_ID, onPointClick);
+        map.off("mouseenter", CLUSTER_LAYER_ID, showPointer);
+        map.off("mouseenter", POINT_LAYER_ID, showPointer);
+        map.off("mouseleave", CLUSTER_LAYER_ID, hidePointer);
+        map.off("mouseleave", POINT_LAYER_ID, hidePointer);
+        hidePointer();
+      }
       if (map.getLayer(COUNT_LAYER_ID)) map.removeLayer(COUNT_LAYER_ID);
       if (map.getLayer(CLUSTER_LAYER_ID)) map.removeLayer(CLUSTER_LAYER_ID);
       if (map.getLayer(POINT_LAYER_ID)) map.removeLayer(POINT_LAYER_ID);

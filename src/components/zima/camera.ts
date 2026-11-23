@@ -54,6 +54,33 @@ const forwardLng = (from: number, to: number) =>
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
+/** How long a click on a marker takes to settle on that place. */
+const DIVE_MS = 1600;
+
+/**
+ * Glide the camera onto a point and zoom in. Stays at least a step closer than
+ * the current zoom, and never zooms back out. A click during the glide takes
+ * over, the same way a drag does.
+ */
+export function easeToPlace(
+  map: MapLibreMap,
+  center: [number, number],
+  zoom: number,
+  maxZoom: number,
+): void {
+  const current = map.getZoom();
+  const next = Math.min(maxZoom, Math.max(zoom, current + 0.6));
+  const delta = next - current;
+  map.stop();
+  map.easeTo({
+    center,
+    zoom: next,
+    duration: Math.round(Math.min(DIVE_MS, Math.max(650, delta * 220))),
+    easing: easeInOutCubic,
+    essential: true,
+  });
+}
+
 /** Zoom at which the sphere spans `fill` of the container's shorter side. */
 export function fitGlobeZoom(el: HTMLElement, fill = GLOBE_FILL): number {
   const side = Math.min(el.clientWidth, el.clientHeight);

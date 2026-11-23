@@ -48,7 +48,7 @@ export function ZimaShell({
   }
 
   return (
-    <div className="relative z-10 flex h-full min-h-0 flex-1 flex-col md:min-h-dvh">
+    <div className="pointer-events-none relative z-10 flex h-full min-h-0 flex-1 flex-col md:min-h-dvh">
       {/* Mobile: search at top */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:hidden">
         <div
@@ -62,12 +62,14 @@ export function ZimaShell({
             >
               Where future builders in your city meet.
             </h1>
-            <ZimaComposer
-              isChatMode={isChatMode}
-              onEnterChatMode={enterChat}
-              chat={chat}
-              search={search}
-            />
+            <div className="pointer-events-auto w-full">
+              <ZimaComposer
+                isChatMode={isChatMode}
+                onEnterChatMode={enterChat}
+                chat={chat}
+                search={search}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -85,12 +87,14 @@ export function ZimaShell({
             >
               Where future builders in your city meet.
             </h1>
-            <ZimaComposer
-              isChatMode={isChatMode}
-              onEnterChatMode={enterChat}
-              chat={chat}
-              search={search}
-            />
+            <div className="pointer-events-auto w-full">
+              <ZimaComposer
+                isChatMode={isChatMode}
+                onEnterChatMode={enterChat}
+                chat={chat}
+                search={search}
+              />
+            </div>
           </div>
         </div>
       </div>

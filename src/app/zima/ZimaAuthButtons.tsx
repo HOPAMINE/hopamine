@@ -185,7 +185,7 @@ function ZimaSignedInUser() {
               onClick={openEdit}
               className={menuItemClass}
             >
-              View profile
+              Edit profile
             </button>
             <button
               type="button"

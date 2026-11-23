@@ -1,0 +1,50 @@
+{
+  "id": "actions",
+  "nav": "Action items",
+  "stamp": "N 11",
+  "eyebrow": "Everything said \"for the Granola\"",
+  "title": "Action",
+  "script": "Items",
+  "ground": "blue",
+  "keywords": ["action items", "todo", "granola", "tasks", "next steps", "who"],
+  "lede": "Tick them off as they land (saved in your browser). Move finished items out at each kickoff.",
+  "blocks": [
+    { "type": "checklist", "people": [
+      { "name": "Mawuli", "initial": "M", "items": [
+        { "text": "Refine the builder application: visual design cues, time budgeting, extra skill sets", "tag": "intake" },
+        { "text": "Make \"What you'd build\" interchangeable so it live-updates as open problems change", "tag": "intake" },
+        { "text": "Progress bars for progress-driven scopes of work", "tag": "intake" },
+        { "text": "Tag open problems frontend / backend and connect the page to a database", "tag": "intake" },
+        { "text": "Tie applications to a Google Sheet to allocate by time budget, timeframe and estimated hours", "tag": "ops" },
+        { "text": "Visual synopsis of the project with inspiration references", "tag": "design" },
+        { "text": "Send Andrea the Joe Justice mob video (41 min)", "tag": "process" },
+        { "text": "Send Laura a TLDR of the call", "tag": "comms" },
+        { "text": "Merge the `hq` branch into HOPAMINE/hopamine main (dev lead review)", "tag": "pipeline" }
+      ]},
+      { "name": "Vishav", "initial": "V", "items": [
+        { "text": "Contributor spreadsheet: skills + hours per week (5 / 3 / 1…)", "tag": "ops" },
+        { "text": "Match devs into small teams / mobs by workload", "tag": "ops" },
+        { "text": "Turn the core vision into buildable features (Sprint 1 board)", "tag": "planning" },
+        { "text": "Schedule the monthly review call", "tag": "process" },
+        { "text": "Use the Granola notes as the core document", "tag": "comms" }
+      ]},
+      { "name": "Jonathan", "initial": "J", "items": [
+        { "text": "Co-plan Sprint 1 with Vishav and confirm owners", "tag": "proposed" },
+        { "text": "Scope S1·1 globe drag + S1·2 zoom animation", "tag": "proposed" }
+      ]},
+      { "name": "Andrea", "initial": "A", "items": [
+        { "text": "Check out the latest Zima build", "tag": "onboarding" },
+        { "text": "Propose the tester role, channel and bug flow (S1·5)", "tag": "proposed" }
+      ]},
+      { "name": "Laura", "initial": "L", "items": [
+        { "text": "Share material about the solarpunk game", "tag": "share" },
+        { "text": "Pick up Zima work once the board is clear", "tag": "onboarding" }
+      ]},
+      { "name": "Product asks", "initial": "Z", "items": [
+        { "text": "Auto-prune: projects idle ~6 months get flagged, then removed", "tag": "Sprint 2" },
+        { "text": "Drag the planet + click a spot", "tag": "Sprint 1" },
+        { "text": "Zoom-in travel animation when search completes", "tag": "Sprint 1" }
+      ]}
+    ]}
+  ]
+}

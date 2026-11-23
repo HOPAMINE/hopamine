@@ -1,0 +1,16 @@
+{
+  "id": "my-section",
+  "nav": "My section",
+  "stamp": "N 13",
+  "eyebrow": "One line of context",
+  "title": "Section",
+  "script": "Title",
+  "ground": "cream",
+  "keywords": ["words", "people", "might", "search"],
+  "lede": "One or two sentences. Supports **bold**, *italic*, `code` and [links](https://zima.hopamine.xyz).",
+  "blocks": [
+    { "type": "cards", "items": [ { "num": "001", "title": "Card title", "text": "Card text." } ] },
+    { "type": "steps", "title": "Optional block title", "items": [ { "title": "Step", "text": "What happens." } ] }
+  ],
+  "_help": "ground: cream | blue | ink | lime | cobalt. Block types: text, quote, cards, panels, tracks, board, team, table, steps, ladder, ring, checklist, code, dosdonts, swatches. Copy any block from another module file to see its shape."
+}

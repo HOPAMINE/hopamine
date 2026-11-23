@@ -1,0 +1,38 @@
+{
+  "id": "pipeline",
+  "nav": "Pipeline",
+  "stamp": "N 09",
+  "eyebrow": "Local → preview → production",
+  "title": "Deploy",
+  "script": "Pipeline",
+  "ground": "cobalt",
+  "keywords": ["pipeline", "deploy", "vercel", "local", "preview", "production", "module", "add", "remove", "live reload", "share", "link"],
+  "lede": "Three environments, same files. Edit locally with live reload, push a branch to get a shareable preview link, merge to main to update the link everyone bookmarks.",
+  "blocks": [
+    { "type": "panels", "items": [
+      { "fill": "white", "title": "1 · Local", "text": "Your laptop. `npm run dev` → http://localhost:4321. Save a module file and the page updates in about two seconds. Nothing leaves your machine." },
+      { "fill": "blue", "title": "2 · Preview", "text": "Any branch you push gets its own Vercel URL. Share it in Discord for review. Team-only by default." },
+      { "fill": "lime", "title": "3 · Production", "text": "The `main` branch. The HQ link pinned in Discord. Updates on every merge." }
+    ]},
+    { "type": "code", "items": [
+      { "lines": "# Run it locally\ncd hopamine/hq\nnpm run dev                 # opens on http://localhost:4321\n# no Node? use:\npython3 -m http.server 4321\n\n# Before pushing\nnpm run check               # validates every module" },
+      { "lines": "# Add a module\ncp modules/_template.json modules/13-my-section.json\n# edit it, then add one line to modules/manifest.json:\n{ \"file\": \"13-my-section.json\", \"on\": true }\n\n# Remove a module (keeps the file)\n{ \"file\": \"07-mobs.json\", \"on\": false }" }
+    ]},
+    { "type": "steps", "title": "Updating from your phone", "items": [
+      { "title": "Ask Claude Code", "text": "Open HOPAMINE/hopamine in the Claude app's Code tab (HQ lives in `hq/`) and say what changed: \"mark S1·2 done and set Sprint 1 progress to 40%\"." },
+      { "title": "It opens a branch", "text": "Claude edits the module JSON, runs the check, and pushes a branch." },
+      { "title": "Preview link", "text": "Vercel posts a preview URL. Open it on LTE, share it with the dev leads." },
+      { "title": "Merge", "text": "Happy? Merge the PR. Production updates in under a minute." }
+    ]},
+    { "type": "table", "title": "Vercel setup", "cols": ["Setting", "Value", "Why"], "rows": [
+      ["Project", "`zima-hq` (team **hopamine**)", "Root Directory `hq`, same repo as the product, its own deploy and link"],
+      ["Framework", "Other · no build · output `.`", "Static files, deploys in seconds"],
+      ["Repo", "HOPAMINE/hopamine → `hq/`", "HQ sits next to the code it describes; the product build ignores it"],
+      ["Production branch", "`main`", "The link everyone bookmarks"],
+      ["Skip unrelated builds", "Ignored build step: only rebuild when `hq/` changes", "Product pushes don't redeploy HQ"],
+      ["Preview", "Every other branch + PR", "Shareable link per change"],
+      ["Protection", "Vercel Authentication (team members)", "Internal only. For someone outside the Vercel team, use **Share** on a deployment to send a temporary link"],
+      ["Clean-up", "5 projects build the demo repo today", "`zima`, `zima.beta`, `zima-beta`, `zima-build`, `zima-k3qv` all redeploy on every push. Keep one."]
+    ]}
+  ]
+}

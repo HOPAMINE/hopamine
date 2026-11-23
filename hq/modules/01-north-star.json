@@ -1,0 +1,22 @@
+{
+  "id": "north-star",
+  "nav": "North star",
+  "stamp": "N 01",
+  "eyebrow": "Why this exists",
+  "title": "The north",
+  "script": "Star",
+  "ground": "cream",
+  "keywords": ["vision", "why", "discord", "lobby", "helicopter", "purpose", "problem"],
+  "lede": "Read this before writing a line of code. Every feature decision gets checked against it.",
+  "blocks": [
+    { "type": "quote", "text": "Discord is the lobby of the hotel. Zima is the helicopter over the city, with an assistant in your ear: point at a spot on the map and ask what's going on over there.", "by": "Mawuli · Nov 18 sync" },
+    { "type": "cards", "items": [
+      { "num": "001", "title": "The problem", "text": "Discord is siloed and linear. Keyword search only finds what you already knew to look for, threads go stale within weeks, DMs and friend requests add friction, and profiles don't reflect what people care about right now. The developer automating their garden never finds the botanist automating hydroponic towers two channels over." },
+      { "num": "002", "title": "What Zima does", "text": "Turns the network into a map you can feel. Search a topic and see where it's alive: the people (bio, links, portfolio, message them now), orgs already working on it nearby with a way in, learning resources that bridge the gap, and live events. It surfaces the unknown unknowns." },
+      { "num": "003", "title": "Scale you can feel", "text": "\"5,900 people interested in X\" means nothing. Zima should feel like walking into a convention hall of 300 people stoked about civil engineering, or a science fair full of projects in progress." },
+      { "num": "004", "title": "The search bar", "text": "The CLI search is the cue that you're in the driver's seat. The platform meets you halfway with results you didn't know you needed." },
+      { "num": "005", "title": "Discord stays", "text": "Discord is permanent: the beta lab for rallying and hackathons. Zima and Discord are parallel lobbies for people who use the internet differently, each an entry point to the other." },
+      { "num": "006", "title": "Not in a rush", "text": "Traffic already exists: the Discord, 70k new followers in 30 days, every external funnel. The priority is robust bug fixes, well-tailored working features, and room for progressive updates." }
+    ]}
+  ]
+}

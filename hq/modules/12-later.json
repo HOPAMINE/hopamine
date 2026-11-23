@@ -1,0 +1,24 @@
+{
+  "id": "later",
+  "nav": "Later",
+  "stamp": "N 12",
+  "eyebrow": "Backlog · not this sprint",
+  "title": "On the",
+  "script": "Horizon",
+  "ground": "ink",
+  "keywords": ["later", "backlog", "georemedy", "hopamine.xyz", "one pager", "assistant", "voice", "opportunity zones", "jaybird", "questions"],
+  "blocks": [
+    { "type": "cards", "items": [
+      { "num": "P3", "title": "GeoRemedy · opt-in tool", "text": "J Bird's private tool that finds opportunity zones: compounding climate and soil risks, the funds and legislation already in place, and the local officials to talk to. Lives inside Zima as a tool you go looking for, never on the front page. First use: geo-specific hackathon problem statements.", "tags": ["pending J Bird"] },
+      { "num": "P3", "title": "hopamine.xyz one-pager", "text": "Light, about three screens: what Hopamine is from first principles, hackathons, the YouTube interviews (next couple of months), links to Discord and Zima. Zima keeps its own domain." },
+      { "num": "P3", "title": "Zima, the assistant", "text": "\"There's a bioagriculture warehouse over here, and three people you might know.\" Point, ask, get taken there." },
+      { "num": "P3", "title": "Profiles that stay alive", "text": "Profiles tied to current interests: presence, \"currently building\", GitHub activity (see `ideas.md` in the product repo)." }
+    ]},
+    { "type": "cards", "title": "Open questions for kickoff", "items": [
+      { "num": "?", "text": "Tester group size for round 1, and who's in it?" },
+      { "num": "?", "text": "Confirm owners for S1·1 → S1·5 once hours are in the sheet." },
+      { "num": "?", "text": "Review call day/time across Montréal and London." },
+      { "num": "?", "text": "Board: GitHub Projects (next to the code) or Linear (Laura asked)?" }
+    ]}
+  ]
+}
